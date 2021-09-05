@@ -27,6 +27,8 @@ namespace Kagami.Function
             ++_messageCounter;
 
             var bot = (Bot) sender;
+            if (group.MemberUin == bot.Uin) return;
+
             var textChain = group.Message.GetChain<PlainTextChain>();
             if (textChain == null) return;
 

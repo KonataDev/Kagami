@@ -5,7 +5,7 @@ using Konata.Core;
 // ReSharper disable ConvertToAutoProperty
 // ReSharper disable PossibleNullReferenceException
 
-namespace Kagami
+namespace Kagami.Utils
 {
     public static class BuildStamp
     {

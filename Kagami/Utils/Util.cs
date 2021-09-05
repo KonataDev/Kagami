@@ -70,6 +70,13 @@ namespace Kagami.Utils
                 request.ReadWriteTimeout = timeout;
                 request.AutomaticDecompression = DecompressionMethods.All;
 
+                // Default useragent
+                request.Headers.Add("User-Agent",
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+                    "AppleWebKit/537.36 (KHTML, like Gecko) " +
+                    "Chrome/94.0.4606.31 Safari/537.36 " +
+                    "Kagami/1.0.0 (Konata Project)");
+
                 // Append request header
                 if (header != null)
                 {
@@ -78,13 +85,6 @@ namespace Kagami.Utils
                         request.Headers.Add(k, v);
                     }
                 }
-
-                // Default useragent
-                request.Headers.Add("User-Agent",
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-                    "AppleWebKit/537.36 (KHTML, like Gecko) " +
-                    "Chrome/94.0.4606.31 Safari/537.36 " +
-                    "Kagami/1.0.0 (Konata Project)");
             }
 
             var response = await request.GetResponseAsync();
