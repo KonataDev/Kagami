@@ -10,8 +10,8 @@ own bot with [Konata.Core](https://github.com/KonataDev/Konata.Core) quickly.
 | Command | Description |
 | ------- | ----------- |
 | /help   | Print the help messages. |
-| /echo   | Print the raw messages after '/echo' |
-| /status | Print the status such like build, version, memory usage..etc |
+| /echo   | Print the raw messages that after '/echo' |
+| /status | Print the status such as build, version, memory usage..etc |
 
 ### Triggers
 | Trigger | Example | Description |
