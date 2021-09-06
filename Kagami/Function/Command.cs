@@ -43,7 +43,9 @@ namespace Kagami.Function
                     else if (textChain.Content.StartsWith("/status"))
                         reply = OnCommandStatus(textChain);
                     else if (textChain.Content.StartsWith("/echo"))
-                        reply = OnCommandEcho(group.Message);
+                        reply = OnCommandEcho(textChain, group.Message);
+                    else if (textChain.Content.StartsWith("/eval"))
+                        reply = OnCommandEval(group.Message);
                     else if (textChain.Content.StartsWith("BV"))
                         reply = OnCommandBvParser(textChain);
                     else if (textChain.Content.StartsWith("https://github.com/"))
@@ -109,11 +111,21 @@ namespace Kagami.Function
             => Text("Hello, I'm Kagami");
 
         /// <summary>
-        /// On message echo
+        /// On message echo <br/>
+        /// <b>Safer than MessageBuilder.Eval()</b>
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="chain"></param>
+        /// <returns></returns>
+        public static MessageBuilder OnCommandEcho(PlainTextChain text, MessageChain chain)
+            => new MessageBuilder(text.Content[5..].Trim()).Add(chain[1..]);
+
+        /// <summary>
+        /// On message eval
         /// </summary>
         /// <param name="chain"></param>
         /// <returns></returns>
-        public static MessageBuilder OnCommandEcho(MessageChain chain)
+        public static MessageBuilder OnCommandEval(MessageChain chain)
             => MessageBuilder.Eval(chain.ToString()[5..].TrimStart());
 
         /// <summary>
