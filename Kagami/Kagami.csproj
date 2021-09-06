@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Konata.Core" Version="1.0.4-alpha.3" />
+    <PackageReference Include="Konata.Core" Version="1.0.5-alpha.3" />
   </ItemGroup>
 
   <ItemGroup>

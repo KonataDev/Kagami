@@ -78,7 +78,7 @@ namespace Kagami
             {
                 EnableAudio = true,
                 TryReconnect = true,
-                ImageChunkSize = 8192,
+                HighwayChunkSize = 8192,
             };
         }
 
