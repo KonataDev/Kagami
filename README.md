@@ -11,7 +11,8 @@ own bot with [Konata.Core](https://github.com/KonataDev/Konata.Core) quickly.
 | Command | Description |
 | ------- | ----------- |
 | /help   | Print the help messages. |
-| /echo   | Print the raw messages that after '/echo' |
+| /eval   | Print the raw messages that after '/eval' |
+| /echo   | Print the raw messages that after '/echo' (safer than /eval) |
 | /status | Print the status such as build, version, memory usage..etc |
 
 ### Triggers
