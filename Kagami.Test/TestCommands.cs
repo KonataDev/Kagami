@@ -1,6 +1,7 @@
 using System;
 using NUnit.Framework;
 using Kagami.Function;
+using Konata.Core.Message;
 using Konata.Core.Message.Model;
 
 namespace Kagami.Test
@@ -33,6 +34,18 @@ namespace Kagami.Test
         {
             Console.WriteLine(Command.OnCommandGithubParser
                 (PlainTextChain.Create("https://github.com/KonataDev/Kagami")).Build().ToString());
+            Assert.Pass();
+        }
+
+        [Test]
+        public void OnCommandEcho()
+        {
+            var textChain = PlainTextChain.Create("/echo =w=");
+            var messageChain = new MessageBuilder(textChain);
+            {
+                Console.WriteLine(Command.OnCommandEcho
+                    (textChain, messageChain.Build()).Build());
+            }
             Assert.Pass();
         }
     }
