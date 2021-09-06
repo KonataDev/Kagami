@@ -59,9 +59,11 @@ namespace Kagami.Utils
         /// <param name="url"></param>
         /// <param name="header"></param>
         /// <param name="timeout"></param>
+        /// <param name="limitLen"></param>
         /// <returns></returns>
         public static async Task<byte[]> Download(string url,
-            Dictionary<string, string> header = null, int timeout = 8000)
+            Dictionary<string, string> header = null,
+            int timeout = 8000, int limitLen = 0)
         {
             // Create request
             var request = WebRequest.CreateHttp(url);
@@ -81,18 +83,35 @@ namespace Kagami.Utils
                 if (header != null)
                 {
                     foreach (var (k, v) in header)
-                    {
                         request.Headers.Add(k, v);
-                    }
                 }
             }
 
+            // Open response stream
             var response = await request.GetResponseAsync();
             {
-                using (var stream = new MemoryStream())
+                // length limitation
+                if (limitLen != 0)
                 {
-                    response.GetResponseStream().CopyTo(stream);
-                    return stream.ToArray();
+                    // Get content length
+                    var totalLen = int.Parse
+                        (response.Headers["Content-Length"]!);
+
+                    // Decline streaming transport
+                    if (totalLen > limitLen || totalLen == 0) return null;
+                }
+
+                // Receive the response data
+                var stream = response.GetResponseStream();
+                await using var memStream = new MemoryStream();
+                {
+                    // Copy the stream
+                    if (stream != null)
+                        await stream.CopyToAsync(memStream);
+
+                    // Close
+                    response.Close();
+                    return memStream.ToArray();
                 }
             }
         }
