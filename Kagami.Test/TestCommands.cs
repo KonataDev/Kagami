@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Kagami.Function;
 using Konata.Core.Message;
@@ -22,18 +23,32 @@ namespace Kagami.Test
         }
 
         [Test]
-        public void OnCommandBvParser()
+        public async Task OnCommandBvParser()
         {
-            Console.WriteLine(Command.OnCommandBvParser
-                (PlainTextChain.Create("BV1Qh411i7ic")).Build().ToString());
+            var textChain = PlainTextChain
+                .Create("BV1Qh411i7ic");
+            {
+                // Get result
+                var result = await Command
+                    .OnCommandBvParser(textChain);
+
+                Console.WriteLine(result.Build());
+            }
             Assert.Pass();
         }
 
         [Test]
-        public void OnCommandGithubParser()
+        public async Task OnCommandGithubParser()
         {
-            Console.WriteLine(Command.OnCommandGithubParser
-                (PlainTextChain.Create("https://github.com/KonataDev/Kagami")).Build().ToString());
+            var textChain = PlainTextChain.Create
+                ("https://github.com/KonataDev/Kagami");
+            {
+                // Get result
+                var result = await Command
+                    .OnCommandGithubParser(textChain);
+
+                Console.WriteLine(result.Build());
+            }
             Assert.Pass();
         }
 
@@ -43,8 +58,23 @@ namespace Kagami.Test
             var textChain = PlainTextChain.Create("/echo =w=");
             var messageChain = new MessageBuilder(textChain);
             {
-                Console.WriteLine(Command.OnCommandEcho
-                    (textChain, messageChain.Build()).Build());
+                // Get result
+                var result = Command.OnCommandEcho
+                    (textChain, messageChain.Build());
+
+                Console.WriteLine(result.Build().ToString());
+            }
+            Assert.Pass();
+        }
+
+        [Test]
+        public void OnCommandEval()
+        {
+            var messageChain = new MessageBuilder
+                ("/eval =w=");
+            {
+                Console.WriteLine(Command.OnCommandEval
+                    (messageChain.Build()).Build());
             }
             Assert.Pass();
         }
