@@ -14,6 +14,8 @@ own bot with [Konata.Core](https://github.com/KonataDev/Konata.Core) quickly.
 | /eval   | Print the raw messages that after '/eval' |
 | /echo   | Print the raw messages that after '/echo' (safer than /eval) |
 | /status | Print the status such as build, version, memory usage..etc |
+| /mute \<at\> [time]   | Mute the member. |
+| /member \<at\> | Inspect member information. |
 
 ### Triggers
 
@@ -25,7 +27,7 @@ own bot with [Konata.Core](https://github.com/KonataDev/Konata.Core) quickly.
 ### Known issues
 
 - [ ] Sometimes offline.
-- [ ] Sometimes stuck on some internal tasks.
+- [x] Sometimes stuck on some internal tasks.
 - [ ] Stuck while the bot exit.
 - [x] Bot can trigger the command which sends by itself. (LMFAO)
 
