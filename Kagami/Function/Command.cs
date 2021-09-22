@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Text;
+using System.Threading.Tasks;
 using Kagami.Utils;
 using Konata.Core;
 using Konata.Core.Events.Model;
+using Konata.Core.Exceptions.Model;
 using Konata.Core.Message;
 using Konata.Core.Message.Model;
 
@@ -21,7 +23,7 @@ namespace Kagami.Function
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="group"></param>
-        internal static void OnGroupMessage(object sender, GroupMessageEvent group)
+        internal static async void OnGroupMessage(object sender, GroupMessageEvent group)
         {
             // Increase
             ++_messageCounter;
@@ -46,14 +48,19 @@ namespace Kagami.Function
                         reply = OnCommandEcho(textChain, group.Message);
                     else if (textChain.Content.StartsWith("/eval"))
                         reply = OnCommandEval(group.Message);
+                    else if (textChain.Content.StartsWith("/member"))
+                        reply = await OnCommandMemberInfo(bot, group);
+                    else if (textChain.Content.StartsWith("/mute"))
+                        reply = await OnCommandMuteMember(bot, group);
                     else if (textChain.Content.StartsWith("BV"))
-                        reply = OnCommandBvParser(textChain);
+                        reply = await OnCommandBvParser(textChain);
                     else if (textChain.Content.StartsWith("https://github.com/"))
-                        reply = OnCommandGithubParser(textChain);
+                        reply = await OnCommandGithubParser(textChain);
                 }
 
                 // Send reply message
-                if (reply != null) bot.SendGroupMessage(group.GroupUin, reply);
+                if (reply != null)
+                    await bot.SendGroupMessage(group.GroupUin, reply);
             }
             catch (Exception e)
             {
@@ -61,7 +68,7 @@ namespace Kagami.Function
                 Console.WriteLine(e.StackTrace);
 
                 // Send error print
-                bot.SendGroupMessage(group.GroupUin,
+                await bot.SendGroupMessage(group.GroupUin,
                     Text($"{e.Message}\n{e.StackTrace}"));
             }
         }
@@ -129,17 +136,78 @@ namespace Kagami.Function
             => MessageBuilder.Eval(chain.ToString()[5..].TrimStart());
 
         /// <summary>
+        /// On member info
+        /// </summary>
+        /// <param name="bot"></param>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public static async Task<MessageBuilder> OnCommandMemberInfo(Bot bot, GroupMessageEvent group)
+        {
+            // Get at
+            var at = group.Message.GetChain<AtChain>();
+            if (at == null) return Text("Agrument error");
+
+            // Get group info
+            var memberInfo = await bot.GetGroupMemberInfo(group.GroupUin, at.AtUin, true);
+            if (memberInfo == null) return Text("No such member");
+
+            return new MessageBuilder("[Member Info]\n")
+                .PlainText($"Name: {memberInfo.Name}\n")
+                .PlainText($"Join: {memberInfo.JoinTime}\n")
+                .PlainText($"Role: {memberInfo.Role}\n")
+                .PlainText($"Level: {memberInfo.Level}\n")
+                .PlainText($"SpecTitle: {memberInfo.SpecialTitle}\n")
+                .PlainText($"Nickname: {memberInfo.NickName}");
+        }
+
+        /// <summary>
+        /// On mute
+        /// </summary>
+        /// <param name="bot"></param>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public static async Task<MessageBuilder> OnCommandMuteMember(Bot bot, GroupMessageEvent group)
+        {
+            // Get at
+            var atchain = group.Message.GetChain<AtChain>();
+            if (atchain == null) return Text("Argument error");
+
+            var time = 60U;
+            var textChains = group.Message
+                .FindChain<PlainTextChain>();
+            {
+                // Parse time
+                if (textChains.Count == 2 &&
+                    uint.TryParse(textChains[1].Content, out var t))
+                {
+                    time = t;
+                }
+            }
+
+            try
+            {
+                if (await bot.GroupMuteMember(group.GroupUin, atchain.AtUin, time))
+                    return Text($"Mute member [{atchain.AtUin}] for {time} sec.");
+                return Text("Unknwon error.");
+            }
+            catch (OperationFailedException e)
+            {
+                return Text($"{e.Message} ({e.HResult})");
+            }
+        }
+
+        /// <summary>
         /// Bv parser
         /// </summary>
         /// <param name="chain"></param>
         /// <returns></returns>
-        public static MessageBuilder OnCommandBvParser(PlainTextChain chain)
+        public static async Task<MessageBuilder> OnCommandBvParser(PlainTextChain chain)
         {
             var avCode = Util.Bv2Av(chain.Content);
             if (avCode == "") return Text("Invalid BV code");
             {
                 // Download the page
-                var bytes = Util.Download($"https://www.bilibili.com/video/{avCode}").Result;
+                var bytes = await Util.Download($"https://www.bilibili.com/video/{avCode}");
                 var html = Encoding.UTF8.GetString(bytes);
                 {
                     // Get meta data
@@ -149,7 +217,7 @@ namespace Kagami.Function
                     var keywdMeta = metaData["keywords"];
 
                     // Download the image
-                    var image = Util.Download(imageMeta).Result;
+                    var image = await Util.Download(imageMeta);
 
                     // Build message
                     var result = new MessageBuilder();
@@ -169,10 +237,10 @@ namespace Kagami.Function
         /// </summary>
         /// <param name="chain"></param>
         /// <returns></returns>
-        public static MessageBuilder OnCommandGithubParser(PlainTextChain chain)
+        public static async Task<MessageBuilder> OnCommandGithubParser(PlainTextChain chain)
         {
             // Download the page
-            var bytes = Util.Download(chain.Content).Result;
+            var bytes = await Util.Download(chain.Content);
             var html = Encoding.UTF8.GetString(bytes);
             {
                 // Get meta data
@@ -180,7 +248,7 @@ namespace Kagami.Function
                 var imageMeta = metaData["og:image"];
 
                 // Download the image
-                var image = Util.Download(imageMeta).Result;
+                var image = await Util.Download(imageMeta);
 
                 // Build message
                 return new MessageBuilder().Image(image);
