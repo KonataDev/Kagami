@@ -243,18 +243,25 @@ namespace Kagami.Function
         public static async Task<MessageBuilder> OnCommandGithubParser(PlainTextChain chain)
         {
             // Download the page
-            var bytes = await Util.Download(chain.Content);
-            var html = Encoding.UTF8.GetString(bytes);
+            try
             {
-                // Get meta data
-                var metaData = Util.GetMetaData("property", html);
-                var imageMeta = metaData["og:image"];
+                var bytes = await Util.Download($"{chain.Content.TrimEnd('/')}.git");
+                var html = Encoding.UTF8.GetString(bytes);
+                {
+                    // Get meta data
+                    var metaData = Util.GetMetaData("property", html);
+                    var imageMeta = metaData["og:image"];
 
-                // Download the image
-                var image = await Util.Download(imageMeta);
-
-                // Build message
-                return new MessageBuilder().Image(image);
+                    // Build message
+                    var image = await Util.Download(imageMeta);
+                    return new MessageBuilder().Image(image);
+                }
+            }
+            catch (WebException webException)
+            {
+                Console.WriteLine($"Not a repository link. \n" +
+                                  $"{webException.Message}");
+                return null;
             }
         }
 
