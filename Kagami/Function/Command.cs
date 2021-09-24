@@ -258,6 +258,14 @@ namespace Kagami.Function
             }
         }
 
+        /// <summary>
+        /// Repeat
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static MessageBuilder OnRepeat(MessageChain message)
+            => new(message);
+
         private static MessageBuilder Text(string text)
             => new MessageBuilder().PlainText(text);
     }
