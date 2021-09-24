@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using Kagami.Utils;
 using Konata.Core;
 using Konata.Core.Events.Model;
 using Konata.Core.Exceptions.Model;
 using Konata.Core.Message;
 using Konata.Core.Message.Model;
+using Kagami.Utils;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedParameter.Local
@@ -56,6 +57,8 @@ namespace Kagami.Function
                         reply = await OnCommandBvParser(textChain);
                     else if (textChain.Content.StartsWith("https://github.com/"))
                         reply = await OnCommandGithubParser(textChain);
+                    else if (Util.CanIDo(0.01))
+                        reply = OnRepeat(group.Message);
                 }
 
                 // Send reply message

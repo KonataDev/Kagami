@@ -139,5 +139,13 @@ namespace Kagami.Utils
 
             return metaDict;
         }
+
+        /// <summary>
+        /// Can I do
+        /// </summary>
+        /// <param name="factor">Probability scale</param>
+        /// <returns></returns>
+        public static bool CanIDo(double factor = 0.5f)
+            => new Random().NextDouble() >= (1 - factor);
     }
 }
