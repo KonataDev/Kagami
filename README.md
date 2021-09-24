@@ -23,6 +23,7 @@ own bot with [Konata.Core](https://github.com/KonataDev/Konata.Core) quickly.
 | ------- | ------- | ----------- |
 | BV      | BV1Qh411i7ic | Parse the BiliBili video code(BV). |
 | Github  | https://github.com/KonataDev/Kagami | Parse the GitHub repo image. |
+|    /    |    /    | Repeater function. | 
 
 ### Known issues
 
