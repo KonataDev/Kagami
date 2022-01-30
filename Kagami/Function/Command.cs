@@ -53,11 +53,13 @@ namespace Kagami.Function
                         reply = await OnCommandMemberInfo(bot, group);
                     else if (textChain.Content.StartsWith("/mute"))
                         reply = await OnCommandMuteMember(bot, group);
+                    else if (textChain.Content.StartsWith("/title"))
+                        reply = await OnCommandSetTitle(bot, group);
                     else if (textChain.Content.StartsWith("BV"))
                         reply = await OnCommandBvParser(textChain);
                     else if (textChain.Content.StartsWith("https://github.com/"))
                         reply = await OnCommandGithubParser(textChain);
-                    else if (Util.CanIDo(0.01))
+                    else if (Util.CanIDo(0.005))
                         reply = OnRepeat(group.Message);
                 }
 
@@ -196,6 +198,37 @@ namespace Kagami.Function
             catch (OperationFailedException e)
             {
                 return Text($"{e.Message} ({e.HResult})");
+            }
+        }
+
+        /// <summary>
+        /// Set title
+        /// </summary>
+        /// <param name="bot"></param>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public static async Task<MessageBuilder> OnCommandSetTitle(Bot bot, GroupMessageEvent group)
+        {
+            // Get at
+            var atchain = group.Message.GetChain<AtChain>();
+            if (atchain == null) return Text("Argument error");
+
+            var textChains = group.Message
+                .FindChain<PlainTextChain>();
+            {
+                // Check argument
+                if (textChains.Count != 2) return Text("Argument error");
+
+                try
+                {
+                    if (await bot.GroupSetSpecialTitle(group.GroupUin, atchain.AtUin, textChains[1].Content, uint.MaxValue))
+                        return Text($"Set special title for member [{atchain.AtUin}].");
+                    return Text("Unknwon error.");
+                }
+                catch (OperationFailedException e)
+                {
+                    return Text($"{e.Message} ({e.HResult})");
+                }
             }
         }
 
