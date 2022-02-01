@@ -112,7 +112,7 @@ namespace Kagami.Function
                 .PlainText($"Total Memory {Util.Bytes2MiB(Process.GetCurrentProcess().WorkingSet64, 2)} MiB\n\n")
 
                 // Copyrights
-                .PlainText("Konata Project (C) 2021");
+                .PlainText("Konata Project (C) 2022");
 
         /// <summary>
         /// On ping me
