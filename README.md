@@ -1,7 +1,8 @@
-## Kagami
+## Kagami 
 
 [![C#](https://img.shields.io/badge/C%23-9.0-green)](#)
 [![License](https://img.shields.io/static/v1?label=LICENSE&message=GNU%20GPLv3&color=lightrey)](./blob/main/LICENSE)
+<img width="20" src="https://github.com/KonataDev/Konata.Core/raw/main/Resources/konata_icon_512_round64.png"> <img width="20" src="https://user-images.githubusercontent.com/17957399/155513020-dd912c37-a86f-4d67-b707-566418cbc152.png">
 
 A demo bot that can lead you to create your  
 own bot with [Konata.Core](https://github.com/KonataDev/Konata.Core) quickly.
