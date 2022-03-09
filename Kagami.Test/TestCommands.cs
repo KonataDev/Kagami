@@ -18,14 +18,14 @@ namespace Kagami.Test
         public void TestPing()
         {
             Console.WriteLine(Command.OnCommandPing
-                (PlainTextChain.Create("/ping")).Build().ToString());
+                (TextChain.Create("/ping")).Build().ToString());
             Assert.Pass();
         }
 
         [Test]
         public async Task OnCommandBvParser()
         {
-            var textChain = PlainTextChain
+            var textChain = TextChain
                 .Create("BV1Qh411i7ic");
             {
                 // Get result
@@ -40,7 +40,7 @@ namespace Kagami.Test
         [Test]
         public async Task OnCommandGithubParser()
         {
-            var textChain = PlainTextChain.Create
+            var textChain = TextChain.Create
                 ("https://github.com/KonataDev/Kagami");
             {
                 // Get result
@@ -55,7 +55,7 @@ namespace Kagami.Test
         [Test]
         public void OnCommandEcho()
         {
-            var textChain = PlainTextChain.Create("/echo =w=");
+            var textChain = TextChain.Create("/echo =w=");
             var messageChain = new MessageBuilder(textChain);
             {
                 // Get result
