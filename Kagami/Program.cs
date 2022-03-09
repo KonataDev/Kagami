@@ -1,149 +1,149 @@
 ﻿using System;
 using System.IO;
 using System.Text.Json;
-using Kagami.Function;
+using System.Threading.Tasks;
 using Konata.Core;
+using Konata.Core.Common;
 using Konata.Core.Events.Model;
+using Kagami.Function;
 
-// ReSharper disable ArrangeTypeModifiers
+namespace Kagami;
 
-namespace Kagami
+public static class Program
 {
-    static class Program
+    private static Bot _bot;
+
+    public static async Task Main()
     {
-        private static Bot _bot;
-
-        public static void Main(string[] args)
+        _bot = new Bot(GetConfig(),
+            GetDevice(), GetKeyStore());
         {
-            _bot = new Bot(GetConfig(),
-                GetDevice(), GetKeyStore());
-            {
-                // Print the log
-                _bot.OnLog += (s, e) => { Console.WriteLine(e.EventMessage); };
+            // Print the log
+            _bot.OnLog += (_, e) => Console.WriteLine(e.EventMessage);
 
-                // Handle the captcha
-                _bot.OnCaptcha += (s, e) =>
+            // Handle the captcha
+            _bot.OnCaptcha += (s, e) =>
+            {
+                switch (e.Type)
                 {
-                    switch (e.Type)
-                    {
-                        case CaptchaEvent.CaptchaType.SMS:
-                            Console.WriteLine(e.Phone);
-                            ((Bot) s)!.SubmitSmsCode(Console.ReadLine());
-                            break;
+                    case CaptchaEvent.CaptchaType.SMS:
+                        Console.WriteLine(e.Phone);
+                        ((Bot) s)!.SubmitSmsCode(Console.ReadLine());
+                        break;
 
-                        case CaptchaEvent.CaptchaType.Slider:
-                            Console.WriteLine(e.SliderUrl);
-                            ((Bot) s)!.SubmitSliderTicket(Console.ReadLine());
-                            break;
+                    case CaptchaEvent.CaptchaType.Slider:
+                        Console.WriteLine(e.SliderUrl);
+                        ((Bot) s)!.SubmitSliderTicket(Console.ReadLine());
+                        break;
 
-                        default:
-                        case CaptchaEvent.CaptchaType.Unknown:
-                            break;
-                    }
-                };
-
-                // Handle poke messages
-                _bot.OnGroupPoke += Poke.OnGroupPoke;
-                
-                // Handle messages from group
-                _bot.OnGroupMessage += Command.OnGroupMessage;
-            }
-
-            // Login the bot
-            var result = _bot.Login().Result;
-            {
-                // Update the keystore
-                if (result) UpdateKeystore(_bot.KeyStore);
-            }
-
-            // cli
-            while (true)
-            {
-                switch (Console.ReadLine())
-                {
-                    case "/stop":
-                        _bot.Logout().Wait();
-                        return;
+                    default:
+                    case CaptchaEvent.CaptchaType.Unknown:
+                        break;
                 }
-            }
-        }
-
-        /// <summary>
-        /// Get bot config
-        /// </summary>
-        /// <returns></returns>
-        private static BotConfig GetConfig()
-        {
-            return new BotConfig
-            {
-                EnableAudio = true,
-                TryReconnect = true,
-                HighwayChunkSize = 8192,
             };
+
+            // Handle poke messages
+            _bot.OnGroupPoke += Poke.OnGroupPoke;
+
+            // Handle messages from group
+            _bot.OnGroupMessage += Command.OnGroupMessage;
         }
 
-        /// <summary>
-        /// Load or create device 
-        /// </summary>
-        /// <returns></returns>
-        private static BotDevice GetDevice()
+        // Login the bot
+        var result = await _bot.Login();
         {
-            // Read the device from config
-            if (File.Exists("device.json"))
-            {
-                return JsonSerializer.Deserialize
-                    <BotDevice>(File.ReadAllText("device.json"));
-            }
-
-            // Create new one
-            var device = BotDevice.Default();
-            {
-                var deviceJson = JsonSerializer.Serialize(device,
-                    new JsonSerializerOptions {WriteIndented = true});
-                File.WriteAllText("device.json", deviceJson);
-            }
-
-            return device;
+            // Update the keystore
+            if (result) UpdateKeystore(_bot.KeyStore);
         }
 
-        /// <summary>
-        /// Load or create keystore
-        /// </summary>
-        /// <returns></returns>
-        private static BotKeyStore GetKeyStore()
+        // cli
+        while (true)
         {
-            // Read the device from config
-            if (File.Exists("keystore.json"))
+            switch (Console.ReadLine())
             {
-                return JsonSerializer.Deserialize
-                    <BotKeyStore>(File.ReadAllText("keystore.json"));
+                case "/stop":
+                    await _bot.Logout();
+                    _bot.Dispose();
+                    return;
             }
+        }
+    }
 
-            Console.WriteLine("For first running, please " +
-                              "type your account and password.");
+    /// <summary>
+    /// Get bot config
+    /// </summary>
+    /// <returns></returns>
+    private static BotConfig GetConfig()
+    {
+        return new BotConfig
+        {
+            EnableAudio = true,
+            TryReconnect = true,
+            HighwayChunkSize = 8192,
+        };
+    }
 
-            Console.Write("Account: ");
-            var account = Console.ReadLine();
-
-            Console.Write("Password: ");
-            var password = Console.ReadLine();
-
-            // Create new one
-            Console.WriteLine("Bot created.");
-            return UpdateKeystore(new BotKeyStore(account, password));
+    /// <summary>
+    /// Load or create device 
+    /// </summary>
+    /// <returns></returns>
+    private static BotDevice GetDevice()
+    {
+        // Read the device from config
+        if (File.Exists("device.json"))
+        {
+            return JsonSerializer.Deserialize
+                <BotDevice>(File.ReadAllText("device.json"));
         }
 
-        /// <summary>
-        /// Update keystore
-        /// </summary>
-        /// <param name="keystore"></param>
-        /// <returns></returns>
-        private static BotKeyStore UpdateKeystore(BotKeyStore keystore)
+        // Create new one
+        var device = BotDevice.Default();
         {
-            var deviceJson = JsonSerializer.Serialize(keystore,
+            var deviceJson = JsonSerializer.Serialize(device,
                 new JsonSerializerOptions {WriteIndented = true});
-            File.WriteAllText("keystore.json", deviceJson);
-            return keystore;
+            File.WriteAllText("device.json", deviceJson);
         }
+
+        return device;
+    }
+
+    /// <summary>
+    /// Load or create keystore
+    /// </summary>
+    /// <returns></returns>
+    private static BotKeyStore GetKeyStore()
+    {
+        // Read the device from config
+        if (File.Exists("keystore.json"))
+        {
+            return JsonSerializer.Deserialize
+                <BotKeyStore>(File.ReadAllText("keystore.json"));
+        }
+
+        Console.WriteLine("For first running, please " +
+                          "type your account and password.");
+
+        Console.Write("Account: ");
+        var account = Console.ReadLine();
+
+        Console.Write("Password: ");
+        var password = Console.ReadLine();
+
+        // Create new one
+        Console.WriteLine("Bot created.");
+        return UpdateKeystore(new BotKeyStore(account, password));
+    }
+
+    /// <summary>
+    /// Update keystore
+    /// </summary>
+    /// <param name="keystore"></param>
+    /// <returns></returns>
+    private static BotKeyStore UpdateKeystore(BotKeyStore keystore)
+    {
+        var deviceJson = JsonSerializer.Serialize(keystore,
+            new JsonSerializerOptions {WriteIndented = true});
+        File.WriteAllText("keystore.json", deviceJson);
+        return keystore;
     }
 }

@@ -32,7 +32,7 @@ namespace Kagami.Function
             var bot = (Bot) sender;
             if (group.MemberUin == bot.Uin) return;
 
-            var textChain = group.Message.GetChain<PlainTextChain>();
+            var textChain = group.Message.GetChain<TextChain>();
             if (textChain == null) return;
 
             try
@@ -83,43 +83,43 @@ namespace Kagami.Function
         /// </summary>
         /// <param name="chain"></param>
         /// <returns></returns>
-        public static MessageBuilder OnCommandHelp(PlainTextChain chain)
+        public static MessageBuilder OnCommandHelp(TextChain chain)
             => new MessageBuilder()
-                .PlainText("[Kagami Help]\n")
-                .PlainText("/help\n Print this message\n\n")
-                .PlainText("/ping\n Pong!\n\n")
-                .PlainText("/status\n Show bot status\n\n")
-                .PlainText("/echo\n Send a message");
+                .Text("[Kagami Help]\n")
+                .Text("/help\n Print this message\n\n")
+                .Text("/ping\n Pong!\n\n")
+                .Text("/status\n Show bot status\n\n")
+                .Text("/echo\n Send a message");
 
         /// <summary>
         /// On status
         /// </summary>
         /// <param name="chain"></param>
         /// <returns></returns>
-        public static MessageBuilder OnCommandStatus(PlainTextChain chain)
+        public static MessageBuilder OnCommandStatus(TextChain chain)
             => new MessageBuilder()
                 // Core descriptions
-                .PlainText($"[Kagami]\n")
-                .PlainText($"[branch:{BuildStamp.Branch}]\n")
-                .PlainText($"[commit:{BuildStamp.CommitHash[..12]}]\n")
-                .PlainText($"[version:{BuildStamp.Version}]\n")
-                .PlainText($"[{BuildStamp.BuildTime}]\n\n")
+                .Text($"[Kagami]\n")
+                .Text($"[branch:{BuildStamp.Branch}]\n")
+                .Text($"[commit:{BuildStamp.CommitHash[..12]}]\n")
+                .Text($"[version:{BuildStamp.Version}]\n")
+                .Text($"[{BuildStamp.BuildTime}]\n\n")
 
                 // System status
-                .PlainText($"Processed {_messageCounter} message(s)\n")
-                .PlainText($"GC Memory {Util.Bytes2MiB(GC.GetTotalAllocatedBytes(), 2)} MiB " +
-                           $"({Math.Round((double) GC.GetTotalAllocatedBytes() / GC.GetTotalMemory(false) * 100, 2)}%)\n")
-                .PlainText($"Total Memory {Util.Bytes2MiB(Process.GetCurrentProcess().WorkingSet64, 2)} MiB\n\n")
+                .Text($"Processed {_messageCounter} message(s)\n")
+                .Text($"GC Memory {Util.Bytes2MiB(GC.GetTotalAllocatedBytes(), 2)} MiB " +
+                      $"({Math.Round((double) GC.GetTotalAllocatedBytes() / GC.GetTotalMemory(false) * 100, 2)}%)\n")
+                .Text($"Total Memory {Util.Bytes2MiB(Process.GetCurrentProcess().WorkingSet64, 2)} MiB\n\n")
 
                 // Copyrights
-                .PlainText("Konata Project (C) 2022");
+                .Text("Konata Project (C) 2022");
 
         /// <summary>
         /// On ping me
         /// </summary>
         /// <param name="chain"></param>
         /// <returns></returns>
-        public static MessageBuilder OnCommandPing(PlainTextChain chain)
+        public static MessageBuilder OnCommandPing(TextChain chain)
             => Text("Hello, I'm Kagami");
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace Kagami.Function
         /// <param name="text"></param>
         /// <param name="chain"></param>
         /// <returns></returns>
-        public static MessageBuilder OnCommandEcho(PlainTextChain text, MessageChain chain)
+        public static MessageBuilder OnCommandEcho(TextChain text, MessageChain chain)
             => new MessageBuilder(text.Content[5..].Trim()).Add(chain[1..]);
 
         /// <summary>
@@ -157,12 +157,12 @@ namespace Kagami.Function
             if (memberInfo == null) return Text("No such member");
 
             return new MessageBuilder("[Member Info]\n")
-                .PlainText($"Name: {memberInfo.Name}\n")
-                .PlainText($"Join: {memberInfo.JoinTime}\n")
-                .PlainText($"Role: {memberInfo.Role}\n")
-                .PlainText($"Level: {memberInfo.Level}\n")
-                .PlainText($"SpecTitle: {memberInfo.SpecialTitle}\n")
-                .PlainText($"Nickname: {memberInfo.NickName}");
+                .Text($"Name: {memberInfo.Name}\n")
+                .Text($"Join: {memberInfo.JoinTime}\n")
+                .Text($"Role: {memberInfo.Role}\n")
+                .Text($"Level: {memberInfo.Level}\n")
+                .Text($"SpecTitle: {memberInfo.SpecialTitle}\n")
+                .Text($"Nickname: {memberInfo.NickName}");
         }
 
         /// <summary>
@@ -179,7 +179,7 @@ namespace Kagami.Function
 
             var time = 60U;
             var textChains = group.Message
-                .FindChain<PlainTextChain>();
+                .FindChain<TextChain>();
             {
                 // Parse time
                 if (textChains.Count == 2 &&
@@ -214,7 +214,7 @@ namespace Kagami.Function
             if (atchain == null) return Text("Argument error");
 
             var textChains = group.Message
-                .FindChain<PlainTextChain>();
+                .FindChain<TextChain>();
             {
                 // Check argument
                 if (textChains.Count != 2) return Text("Argument error");
@@ -237,7 +237,7 @@ namespace Kagami.Function
         /// </summary>
         /// <param name="chain"></param>
         /// <returns></returns>
-        public static async Task<MessageBuilder> OnCommandBvParser(PlainTextChain chain)
+        public static async Task<MessageBuilder> OnCommandBvParser(TextChain chain)
         {
             var avCode = Util.Bv2Av(chain.Content);
             if (avCode == "") return Text("Invalid BV code");
@@ -258,10 +258,10 @@ namespace Kagami.Function
                     // Build message
                     var result = new MessageBuilder();
                     {
-                        result.PlainText($"{titleMeta}\n");
-                        result.PlainText($"https://www.bilibili.com/video/{avCode}\n\n");
+                        result.Text($"{titleMeta}\n");
+                        result.Text($"https://www.bilibili.com/video/{avCode}\n\n");
                         result.Image(image);
-                        result.PlainText("\n#" + string.Join(" #", keywdMeta.Split(",")[1..^4]));
+                        result.Text("\n#" + string.Join(" #", keywdMeta.Split(",")[1..^4]));
                     }
                     return result;
                 }
@@ -273,7 +273,7 @@ namespace Kagami.Function
         /// </summary>
         /// <param name="chain"></param>
         /// <returns></returns>
-        public static async Task<MessageBuilder> OnCommandGithubParser(PlainTextChain chain)
+        public static async Task<MessageBuilder> OnCommandGithubParser(TextChain chain)
         {
             // Download the page
             try
@@ -307,6 +307,6 @@ namespace Kagami.Function
             => new(message);
 
         private static MessageBuilder Text(string text)
-            => new MessageBuilder().PlainText(text);
+            => new MessageBuilder().Text(text);
     }
 }
