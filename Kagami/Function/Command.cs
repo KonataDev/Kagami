@@ -32,7 +32,7 @@ namespace Kagami.Function
             var bot = (Bot) sender;
             if (group.MemberUin == bot.Uin) return;
 
-            var textChain = group.Message.GetChain<TextChain>();
+            var textChain = group.Message.Chain.GetChain<TextChain>();
             if (textChain == null) return;
 
             try
@@ -46,9 +46,9 @@ namespace Kagami.Function
                     else if (textChain.Content.StartsWith("/status"))
                         reply = OnCommandStatus(textChain);
                     else if (textChain.Content.StartsWith("/echo"))
-                        reply = OnCommandEcho(textChain, group.Message);
+                        reply = OnCommandEcho(textChain, group.Message.Chain);
                     else if (textChain.Content.StartsWith("/eval"))
-                        reply = OnCommandEval(group.Message);
+                        reply = OnCommandEval(group.Message.Chain);
                     else if (textChain.Content.StartsWith("/member"))
                         reply = await OnCommandMemberInfo(bot, group);
                     else if (textChain.Content.StartsWith("/mute"))
@@ -60,7 +60,7 @@ namespace Kagami.Function
                     else if (textChain.Content.StartsWith("https://github.com/"))
                         reply = await OnCommandGithubParser(textChain);
                     else if (Util.CanIDo(0.005))
-                        reply = OnRepeat(group.Message);
+                        reply = OnRepeat(group.Message.Chain);
                 }
 
                 // Send reply message
@@ -149,7 +149,7 @@ namespace Kagami.Function
         public static async Task<MessageBuilder> OnCommandMemberInfo(Bot bot, GroupMessageEvent group)
         {
             // Get at
-            var at = group.Message.GetChain<AtChain>();
+            var at = group.Message.Chain.GetChain<AtChain>();
             if (at == null) return Text("Agrument error");
 
             // Get group info
@@ -174,11 +174,11 @@ namespace Kagami.Function
         public static async Task<MessageBuilder> OnCommandMuteMember(Bot bot, GroupMessageEvent group)
         {
             // Get at
-            var atchain = group.Message.GetChain<AtChain>();
+            var atchain = group.Message.Chain.GetChain<AtChain>();
             if (atchain == null) return Text("Argument error");
 
             var time = 60U;
-            var textChains = group.Message
+            var textChains = group.Message.Chain
                 .FindChain<TextChain>();
             {
                 // Parse time
@@ -210,10 +210,10 @@ namespace Kagami.Function
         public static async Task<MessageBuilder> OnCommandSetTitle(Bot bot, GroupMessageEvent group)
         {
             // Get at
-            var atchain = group.Message.GetChain<AtChain>();
+            var atchain = group.Message.Chain.GetChain<AtChain>();
             if (atchain == null) return Text("Argument error");
 
-            var textChains = group.Message
+            var textChains = group.Message.Chain
                 .FindChain<TextChain>();
             {
                 // Check argument
