@@ -150,7 +150,7 @@ namespace Kagami.Function
         {
             // Get at
             var at = group.Chain.GetChain<AtChain>();
-            if (at == null) return Text("Agrument error");
+            if (at == null) return Text("Argument error");
 
             // Get group info
             var memberInfo = await bot.GetGroupMemberInfo(group.GroupUin, at.AtUin, true);
@@ -174,8 +174,8 @@ namespace Kagami.Function
         public static async Task<MessageBuilder> OnCommandMuteMember(Bot bot, GroupMessageEvent group)
         {
             // Get at
-            var atchain = group.Chain.GetChain<AtChain>();
-            if (atchain == null) return Text("Argument error");
+            var atChain = group.Chain.GetChain<AtChain>();
+            if (atChain == null) return Text("Argument error");
 
             var time = 60U;
             var textChains = group.Chain
@@ -191,9 +191,9 @@ namespace Kagami.Function
 
             try
             {
-                if (await bot.GroupMuteMember(group.GroupUin, atchain.AtUin, time))
-                    return Text($"Mute member [{atchain.AtUin}] for {time} sec.");
-                return Text("Unknwon error.");
+                if (await bot.GroupMuteMember(group.GroupUin, atChain.AtUin, time))
+                    return Text($"Mute member [{atChain.AtUin}] for {time} sec.");
+                return Text("Unknown error.");
             }
             catch (OperationFailedException e)
             {
@@ -210,8 +210,8 @@ namespace Kagami.Function
         public static async Task<MessageBuilder> OnCommandSetTitle(Bot bot, GroupMessageEvent group)
         {
             // Get at
-            var atchain = group.Chain.GetChain<AtChain>();
-            if (atchain == null) return Text("Argument error");
+            var atChain = group.Chain.GetChain<AtChain>();
+            if (atChain == null) return Text("Argument error");
 
             var textChains = group.Chain
                 .FindChain<TextChain>();
@@ -221,9 +221,9 @@ namespace Kagami.Function
 
                 try
                 {
-                    if (await bot.GroupSetSpecialTitle(group.GroupUin, atchain.AtUin, textChains[1].Content, uint.MaxValue))
-                        return Text($"Set special title for member [{atchain.AtUin}].");
-                    return Text("Unknwon error.");
+                    if (await bot.GroupSetSpecialTitle(group.GroupUin, atChain.AtUin, textChains[1].Content, uint.MaxValue))
+                        return Text($"Set special title for member [{atChain.AtUin}].");
+                    return Text("Unknown error.");
                 }
                 catch (OperationFailedException e)
                 {
@@ -250,7 +250,7 @@ namespace Kagami.Function
                     var metaData = Util.GetMetaData("itemprop", html);
                     var titleMeta = metaData["description"];
                     var imageMeta = metaData["image"];
-                    var keywdMeta = metaData["keywords"];
+                    var keyWdMeta = metaData["keywords"];
 
                     // Download the image
                     var image = await Util.Download(imageMeta);
@@ -261,7 +261,7 @@ namespace Kagami.Function
                         result.Text($"{titleMeta}\n");
                         result.Text($"https://www.bilibili.com/video/{avCode}\n\n");
                         result.Image(image);
-                        result.Text("\n#" + string.Join(" #", keywdMeta.Split(",")[1..^4]));
+                        result.Text("\n#" + string.Join(" #", keyWdMeta.Split(",")[1..^4]));
                     }
                     return result;
                 }
