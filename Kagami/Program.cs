@@ -6,6 +6,8 @@ using Konata.Core;
 using Konata.Core.Common;
 using Konata.Core.Events.Model;
 using Kagami.Function;
+using Konata.Core.Interfaces;
+using Konata.Core.Interfaces.Api;
 
 namespace Kagami;
 
@@ -15,7 +17,7 @@ public static class Program
 
     public static async Task Main()
     {
-        _bot = new Bot(GetConfig(),
+        _bot = BotFather.Create(GetConfig(),
             GetDevice(), GetKeyStore());
         {
             // Print the log
@@ -28,12 +30,12 @@ public static class Program
                 {
                     case CaptchaEvent.CaptchaType.SMS:
                         Console.WriteLine(e.Phone);
-                        ((Bot) s)!.SubmitSmsCode(Console.ReadLine());
+                        s.SubmitSmsCode(Console.ReadLine());
                         break;
 
                     case CaptchaEvent.CaptchaType.Slider:
                         Console.WriteLine(e.SliderUrl);
-                        ((Bot) s)!.SubmitSliderTicket(Console.ReadLine());
+                        s.SubmitSliderTicket(Console.ReadLine());
                         break;
 
                     default:
