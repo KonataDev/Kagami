@@ -8,6 +8,7 @@ using Konata.Core.Events.Model;
 using Konata.Core.Exceptions.Model;
 using Konata.Core.Message;
 using Konata.Core.Message.Model;
+using Konata.Core.Interfaces.Api;
 using Kagami.Utils;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -22,14 +23,13 @@ namespace Kagami.Function
         /// <summary>
         /// On group message
         /// </summary>
-        /// <param name="sender"></param>
+        /// <param name="bot"></param>
         /// <param name="group"></param>
-        internal static async void OnGroupMessage(object sender, GroupMessageEvent group)
+        internal static async void OnGroupMessage(Bot bot, GroupMessageEvent group)
         {
             // Increase
             ++_messageCounter;
-
-            var bot = (Bot) sender;
+            
             if (group.MemberUin == bot.Uin) return;
 
             var textChain = group.Chain.GetChain<TextChain>();
