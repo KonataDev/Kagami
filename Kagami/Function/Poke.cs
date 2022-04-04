@@ -1,22 +1,21 @@
 ﻿using Konata.Core;
 using Konata.Core.Events.Model;
+using Konata.Core.Interfaces.Api;
 
-namespace Kagami.Function
+namespace Kagami.Function;
+
+public static class Poke
 {
-    public static class Poke
+    /// <summary>
+    ///     On group poke
+    /// </summary>
+    /// <param name="bot"></param>
+    /// <param name="group"></param>
+    internal static void OnGroupPoke(Bot bot, GroupPokeEvent group)
     {
-        /// <summary>
-        /// On group poke
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="group"></param>
-        internal static void OnGroupPoke(object sender, GroupPokeEvent group)
-        {
-            var bot = (Bot) sender;
-            if (group.MemberUin != bot.Uin) return;
+        if (group.MemberUin != bot.Uin) return;
 
-            // Convert it to ping
-            bot.SendGroupMessage(group.GroupUin, Command.OnCommandPing(null));
-        }
+        // Convert it to ping
+        bot.SendGroupMessage(group.GroupUin, Command.OnCommandPing(null));
     }
 }

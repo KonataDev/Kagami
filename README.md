@@ -12,22 +12,25 @@ own bot with [Konata.Core](https://github.com/KonataDev/Konata.Core) quickly.
 
 ### Commands
 
-| Command | Description |
-| ------- | ----------- |
-| /help   | Print the help messages. |
-| /eval   | Print the raw messages that after '/eval' |
-| /echo   | Print the raw messages that after '/echo' (safer than /eval) |
-| /status | Print the status such as build, version, memory usage..etc |
-| /mute \<at\> [time]   | Mute the member. |
-| /member \<at\> | Inspect member information. |
+| Command             | Description                                                  |
+|---------------------|--------------------------------------------------------------|
+| /help               | Print the help messages.                                     |
+| /eval               | Print the raw messages that after '/eval'                    |
+| /echo               | Print the raw messages that after '/echo' (safer than /eval) |
+| /status             | Print the status such as build, version, memory usage..etc   |
+| /mute \<at\> [time] | Mute the member.                                             |
+| /member \<at\>      | Inspect member information.                                  |
+| /poke [at]          | Send poke to the member or send poke to the sender.          | 
 
 ### Triggers
 
-| Trigger | Example | Description |
-| ------- | ------- | ----------- |
-| BV      | BV1Qh411i7ic | Parse the BiliBili video code(BV). |
-| Github  | https://github.com/KonataDev/Kagami | Parse the GitHub repo image. |
-|    /    |    /    | Repeater function. | 
+| Trigger              | Example                             | Description                        |
+|----------------------|-------------------------------------|------------------------------------|
+| BV                   | BV1Qh411i7ic                        | Parse the BiliBili video code(BV). |
+| Github               | https://github.com/KonataDev/Kagami | Parse the GitHub repo image.       |
+| Friend Add Request   | /                                   | Auto Approve                       |
+| Group Invite Request | /                                   | Auto Approve                       |
+| /                    | /                                   | Repeater function.                 | 
 
 ### Known issues
 
