@@ -28,7 +28,7 @@ public static class Program
             {
                 switch (e.Type)
                 {
-                    case CaptchaEvent.CaptchaType.SMS:
+                    case CaptchaEvent.CaptchaType.Sms:
                         Console.WriteLine(e.Phone);
                         s.SubmitSmsCode(Console.ReadLine());
                         break;
