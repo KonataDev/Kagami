@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -61,59 +61,39 @@ namespace Kagami.Utils
         /// <param name="timeout"></param>
         /// <param name="limitLen"></param>
         /// <returns></returns>
-        public static async Task<byte[]> Download(string url,
+        public static async Task<byte[]> Download(string url, 
             Dictionary<string, string> header = null,
             int timeout = 8000, int limitLen = 0)
         {
             // Create request
-            var request = WebRequest.CreateHttp(url);
+            var request = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.All })
             {
-                request.Timeout = timeout;
-                request.ReadWriteTimeout = timeout;
-                request.AutomaticDecompression = DecompressionMethods.All;
-
-                // Default useragent
-                request.Headers.Add("User-Agent",
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-                    "AppleWebKit/537.36 (KHTML, like Gecko) " +
-                    "Chrome/94.0.4606.31 Safari/537.36 " +
-                    "Kagami/1.0.0 (Konata Project)");
-
-                // Append request header
-                if (header != null)
-                {
-                    foreach (var (k, v) in header)
-                        request.Headers.Add(k, v);
-                }
-            }
+                Timeout = new TimeSpan(0, 0, 0, timeout)
+            };
+            // Default useragent
+            request.DefaultRequestHeaders.Add("User-Agent", new[]
+            {
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " ,
+                "AppleWebKit/537.36 (KHTML, like Gecko) " ,
+                "Chrome/94.0.4606.31 Safari/537.36 " ,
+                "Kagami/1.0.0 (Konata Project)"
+            });
+            // Append request header
+            if (header is not null)
+                foreach (var (k, v) in header)
+                    request.DefaultRequestHeaders.Add(k, v);
 
             // Open response stream
-            var response = await request.GetResponseAsync();
-            {
-                // length limitation
-                if (limitLen != 0)
-                {
-                    // Get content length
-                    var totalLen = int.Parse
-                        (response.Headers["Content-Length"]!);
+            var response = await request.GetByteArrayAsync(url);
 
-                    // Decline streaming transport
-                    if (totalLen > limitLen || totalLen == 0) return null;
-                }
+            // length limitation
+            if (limitLen is not 0)
+                // Decline streaming transport
+                if (response.LongLength > limitLen || response.LongLength is 0)
+                    return null;
 
-                // Receive the response data
-                var stream = response.GetResponseStream();
-                await using var memStream = new MemoryStream();
-                {
-                    // Copy the stream
-                    if (stream != null)
-                        await stream.CopyToAsync(memStream);
-
-                    // Close
-                    response.Close();
-                    return memStream.ToArray();
-                }
-            }
+            // Receive the response data
+            return response;
         }
 
         /// <summary>
