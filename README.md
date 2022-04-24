@@ -1,6 +1,6 @@
 ## Kagami 
 
-[![C#](https://img.shields.io/badge/C%23-9.0-green)](#)
+[![C#](https://img.shields.io/badge/C%23-latest-green)](#)
 [![License](https://img.shields.io/static/v1?label=LICENSE&message=GNU%20GPLv3&color=lightrey)](./blob/main/LICENSE)  
 <img width="20" src="https://github.com/KonataDev/Konata.Core/raw/main/Resources/konata_icon_512_round64.png">
 <img width="20" src="https://user-images.githubusercontent.com/17957399/157422004-2a367049-3243-4206-90f4-ecb3f033c5ab.png">
@@ -31,7 +31,7 @@ own bot with [Konata.Core](https://github.com/KonataDev/Konata.Core) quickly.
 
 ### Known issues
 
-- [ ] Sometimes offline.
+- [x] Sometimes offline.
 - [x] Sometimes stuck on some internal tasks.
 - [x] Stuck while the bot exit.
 - [x] Bot can trigger the command which sends by itself. (LMFAO)
