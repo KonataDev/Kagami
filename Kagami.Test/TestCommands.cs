@@ -5,78 +5,77 @@ using Kagami.Function;
 using Konata.Core.Message;
 using Konata.Core.Message.Model;
 
-namespace Kagami.Test
+namespace Kagami.Test;
+
+public class Tests
 {
-    public class Tests
+    [SetUp]
+    public void Setup()
     {
-        [SetUp]
-        public void Setup()
+    }
+
+    [Test]
+    public void TestPing()
+    {
+        Console.WriteLine(Command.OnCommandPing
+            (TextChain.Create("/ping")).Build().ToString());
+        Assert.Pass();
+    }
+
+    [Test]
+    public async Task OnCommandBvParser()
+    {
+        var textChain = TextChain
+            .Create("BV1Qh411i7ic");
         {
-        }
+            // Get result
+            var result = await Command
+                .OnCommandBvParser(textChain);
 
-        [Test]
-        public void TestPing()
+            Console.WriteLine(result.Build());
+        }
+        Assert.Pass();
+    }
+
+    [Test]
+    public async Task OnCommandGithubParser()
+    {
+        var textChain = TextChain.Create
+            ("https://github.com/KonataDev/Kagami");
         {
-            Console.WriteLine(Command.OnCommandPing
-                (TextChain.Create("/ping")).Build().ToString());
-            Assert.Pass();
-        }
+            // Get result
+            var result = await Command
+                .OnCommandGithubParser(textChain);
 
-        [Test]
-        public async Task OnCommandBvParser()
+            Console.WriteLine(result.Build());
+        }
+        Assert.Pass();
+    }
+
+    [Test]
+    public void OnCommandEcho()
+    {
+        var textChain = TextChain.Create("/echo =w=");
+        var messageChain = new MessageBuilder(textChain);
         {
-            var textChain = TextChain
-                .Create("BV1Qh411i7ic");
-            {
-                // Get result
-                var result = await Command
-                    .OnCommandBvParser(textChain);
+            // Get result
+            var result = Command.OnCommandEcho
+                (textChain, messageChain.Build());
 
-                Console.WriteLine(result.Build());
-            }
-            Assert.Pass();
+            Console.WriteLine(result.Build().ToString());
         }
+        Assert.Pass();
+    }
 
-        [Test]
-        public async Task OnCommandGithubParser()
+    [Test]
+    public void OnCommandEval()
+    {
+        var messageChain = new MessageBuilder
+            ("/eval =w=");
         {
-            var textChain = TextChain.Create
-                ("https://github.com/KonataDev/Kagami");
-            {
-                // Get result
-                var result = await Command
-                    .OnCommandGithubParser(textChain);
-
-                Console.WriteLine(result.Build());
-            }
-            Assert.Pass();
+            Console.WriteLine(Command.OnCommandEval
+                (messageChain.Build()).Build());
         }
-
-        [Test]
-        public void OnCommandEcho()
-        {
-            var textChain = TextChain.Create("/echo =w=");
-            var messageChain = new MessageBuilder(textChain);
-            {
-                // Get result
-                var result = Command.OnCommandEcho
-                    (textChain, messageChain.Build());
-
-                Console.WriteLine(result.Build().ToString());
-            }
-            Assert.Pass();
-        }
-
-        [Test]
-        public void OnCommandEval()
-        {
-            var messageChain = new MessageBuilder
-                ("/eval =w=");
-            {
-                Console.WriteLine(Command.OnCommandEval
-                    (messageChain.Build()).Build());
-            }
-            Assert.Pass();
-        }
+        Assert.Pass();
     }
 }
