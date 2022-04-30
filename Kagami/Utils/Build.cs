@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reflection;
 
 // ReSharper disable ConvertToAutoProperty
-// ReSharper disable PossibleNullReferenceException
 
 namespace Kagami.Utils;
 
