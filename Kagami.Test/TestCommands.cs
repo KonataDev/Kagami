@@ -1,9 +1,9 @@
-using System;
-using System.Threading.Tasks;
-using NUnit.Framework;
 using Kagami.Function;
 using Konata.Core.Message;
 using Konata.Core.Message.Model;
+using NUnit.Framework;
+using System;
+using System.Threading.Tasks;
 
 namespace Kagami.Test;
 

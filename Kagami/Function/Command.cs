@@ -36,7 +36,7 @@ public static class Command
 
         try
         {
-            MessageBuilder reply = null;
+            MessageBuilder? reply = null;
             {
                 if (textChain.Content.StartsWith("/help"))
                     reply = OnCommandHelp(textChain);
@@ -118,7 +118,7 @@ public static class Command
     /// </summary>
     /// <param name="chain"></param>
     /// <returns></returns>
-    public static MessageBuilder OnCommandPing(TextChain chain)
+    public static MessageBuilder OnCommandPing(TextChain? chain)
         => Text("Hello, I'm Kagami");
 
     /// <summary>
@@ -239,32 +239,31 @@ public static class Command
     public static async Task<MessageBuilder> OnCommandBvParser(TextChain chain)
     {
         var avCode = chain.Content.Bv2Av();
-        if (avCode is "") return Text("Invalid BV code");
+        if (avCode is "")
+            return Text("Invalid BV code");
+        var bytes = await $"https://www.bilibili.com/video/{avCode}".UrlDownload();
+
+        // UrlDownload the page
+        var html = Encoding.UTF8.GetString(bytes);
+
+        // Get meta data
+        var metaData = html.GetMetaData("itemprop");
+        var titleMeta = metaData["description"];
+        var imageMeta = metaData["image"];
+        var keyWdMeta = metaData["keywords"];
+
+        // UrlDownload the image
+        var image = await imageMeta.UrlDownload();
+
+        // Build message
+        var result = new MessageBuilder();
         {
-            // UrlDownload the page
-            var bytes = await $"https://www.bilibili.com/video/{avCode}".UrlDownload();
-            var html = Encoding.UTF8.GetString(bytes);
-            {
-                // Get meta data
-                var metaData = html.GetMetaData("itemprop");
-                var titleMeta = metaData["description"];
-                var imageMeta = metaData["image"];
-                var keyWdMeta = metaData["keywords"];
-
-                // UrlDownload the image
-                var image = await imageMeta.UrlDownload();
-
-                // Build message
-                var result = new MessageBuilder();
-                {
-                    result.Text($"{titleMeta}\n");
-                    result.Text($"https://www.bilibili.com/video/{avCode}\n\n");
-                    result.Image(image);
-                    result.Text("\n#" + string.Join(" #", keyWdMeta.Split(",")[1..^4]));
-                }
-                return result;
-            }
+            result.Text($"{titleMeta}\n");
+            result.Text($"https://www.bilibili.com/video/{avCode}\n\n");
+            result.Image(image);
+            result.Text("\n#" + string.Join(" #", keyWdMeta.Split(",")[1..^4]));
         }
+        return result;
     }
 
     /// <summary>
@@ -278,22 +277,22 @@ public static class Command
         try
         {
             var bytes = await $"{chain.Content.TrimEnd('/')}.git".UrlDownload();
-            var html = Encoding.UTF8.GetString(bytes);
-            {
-                // Get meta data
-                var metaData = html.GetMetaData("property");
-                var imageMeta = metaData["og:image"];
 
-                // Build message
-                var image = await imageMeta.UrlDownload();
-                return new MessageBuilder().Image(image);
-            }
+            var html = Encoding.UTF8.GetString(bytes);
+
+            // Get meta data
+            var metaData = html.GetMetaData("property");
+            var imageMeta = metaData["og:image"];
+
+            // Build message
+            var image = await imageMeta.UrlDownload();
+            return new MessageBuilder().Image(image);
         }
         catch (Exception e)
         {
             Console.WriteLine($"Not a repository link. \n" +
                               $"{e.Message}");
-            return null;
+            return Text("Not a repository link.");
         }
     }
 
