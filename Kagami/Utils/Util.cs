@@ -57,7 +57,7 @@ public static class Util
     /// <returns></returns>
     public static async Task<byte[]> UrlDownload(this string url,
         Dictionary<string, string>? header = null,
-        int timeout = 8000, int limitLen = 2 << 9)
+        int timeout = 8000, long limitLen = ((long)2 << 30) - 1)
     {
         // Create request
         var request = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.All })
