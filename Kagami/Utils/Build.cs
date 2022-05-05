@@ -1,9 +1,8 @@
-﻿using System.Linq;
+﻿using Konata.Core;
+using System.Linq;
 using System.Reflection;
-using Konata.Core;
 
 // ReSharper disable ConvertToAutoProperty
-// ReSharper disable PossibleNullReferenceException
 
 namespace Kagami.Utils;
 
@@ -23,8 +22,8 @@ public static class BuildStamp
 
     private static readonly string[] Stamp
         = typeof(Bot).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
-            .FirstOrDefault(x => x.Key is "BuildStamp").Value.Split(";");
+            .First(x => x.Key is "BuildStamp").Value!.Split(";");
 
     private static readonly string InformationalVersion
-        = typeof(Bot).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+        = typeof(Bot).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
 }

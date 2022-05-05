@@ -1,25 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net6.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Konata.Core" Version="1.*-*" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Konata.Core" Version="1.*-*" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Content Include="..\.gitignore">
-      <Link>.gitignore</Link>
-    </Content>
-    <Content Include="..\LICENSE">
-      <Link>LICENSE</Link>
-    </Content>
-    <Content Include="..\README.md">
-      <Link>README.md</Link>
-    </Content>
-  </ItemGroup>
+	<ItemGroup>
+		<Content Include="..\.gitignore">
+			<Link>.gitignore</Link>
+		</Content>
+		<Content Include="..\LICENSE">
+			<Link>LICENSE</Link>
+		</Content>
+		<Content Include="..\README.md">
+			<Link>README.md</Link>
+		</Content>
+	</ItemGroup>
 
 </Project>

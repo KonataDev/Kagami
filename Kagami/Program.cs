@@ -1,19 +1,19 @@
-﻿using System;
-using System.IO;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using Kagami.Function;
 using Konata.Core;
 using Konata.Core.Common;
 using Konata.Core.Events.Model;
-using Kagami.Function;
 using Konata.Core.Interfaces;
 using Konata.Core.Interfaces.Api;
+using System;
+using System.IO;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Kagami;
 
 public static class Program
 {
-    private static Bot _bot;
+    private static Bot _bot = null!;
 
     public static async Task Main()
     {
@@ -89,7 +89,7 @@ public static class Program
     /// Load or create device 
     /// </summary>
     /// <returns></returns>
-    private static BotDevice GetDevice()
+    private static BotDevice? GetDevice()
     {
         // Read the device from config
         if (File.Exists("device.json"))
@@ -102,7 +102,7 @@ public static class Program
         var device = BotDevice.Default();
         {
             var deviceJson = JsonSerializer.Serialize(device,
-                new JsonSerializerOptions {WriteIndented = true});
+                new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText("device.json", deviceJson);
         }
 
@@ -113,7 +113,7 @@ public static class Program
     /// Load or create keystore
     /// </summary>
     /// <returns></returns>
-    private static BotKeyStore GetKeyStore()
+    private static BotKeyStore? GetKeyStore()
     {
         // Read the device from config
         if (File.Exists("keystore.json"))
@@ -144,7 +144,7 @@ public static class Program
     private static BotKeyStore UpdateKeystore(BotKeyStore keystore)
     {
         var deviceJson = JsonSerializer.Serialize(keystore,
-            new JsonSerializerOptions {WriteIndented = true});
+            new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText("keystore.json", deviceJson);
         return keystore;
     }
