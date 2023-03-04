@@ -36,7 +36,7 @@ You can define your command like the example below:
 var example = string (int a, bool b, string c)
     => $"a is {a}, b is {b}, c is \"{c}\"";
 ```
-After defined the command, you can send '/example 1 false Hello' in your group,
+After defined the command, you can send '/example 1 false Hello' in your group,  
 the Kagami will print "a is 1, b is False, c is "Hello"" string. 
 
 ### Known issues
