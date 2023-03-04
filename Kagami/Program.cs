@@ -314,11 +314,11 @@ public static class Program
                         if (e is ReplRuntimeException rre)
                             result = $"{rre.InnerException!.Message}\n{rre.InnerException!.StackTrace}";
 
-                        // Slient other any errors
+                        // Silent compilation errors if not debugging
                         else result = debugging ? e.Message : null;
                     }
 
-                    // No errors return.
+                    // No errors return
                     if (result != null)
                         reply = MessageBuilder.Eval(result.ToString());
                 }
