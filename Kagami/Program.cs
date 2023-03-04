@@ -1,27 +1,71 @@
-﻿using Kagami.Function;
+﻿using System;
+using System.IO;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Konata.Core;
 using Konata.Core.Common;
 using Konata.Core.Events.Model;
 using Konata.Core.Interfaces;
 using Konata.Core.Interfaces.Api;
-using System;
-using System.IO;
-using System.Text.Json;
-using System.Threading.Tasks;
+using Konata.Core.Message;
+using Konata.Core.Message.Model;
+using Kagami.SandBox;
 
 namespace Kagami;
 
 public static class Program
 {
     private static Bot _bot = null!;
+    private static ReplEnvironment _sandboxEnv = null!;
+    private static ReplRuntime<ReplEnvironment> _sandbox = null!;
+
+    private static readonly Regex[] SandBoxFilter =
+    {
+        new(@"^(true|false)$", RegexOptions.IgnoreCase | RegexOptions.Multiline),
+        new(@"^(\+|-)?[0-9.]*(U|L|UL|F|D|M)?$", RegexOptions.IgnoreCase | RegexOptions.Multiline),
+    };
 
     public static async Task Main()
     {
-        _bot = BotFather.Create(GetConfig(),
-            GetDevice(), GetKeyStore());
+        // Create sandbox
+        _sandboxEnv = new ReplEnvironment();
+        _sandbox = new ReplRuntime<ReplEnvironment>(_sandboxEnv,
+
+            // Additional references
+            new[] {"Konata.Core", "Paraparty.JsonChan"},
+
+            // Additional usings
+            new[]
+            {
+                "System.Runtime",
+                "System.Threading",
+                "System.Threading.Tasks",
+                "Konata.Core",
+                "Konata.Core.Common",
+                "Konata.Core.Interfaces",
+                "Konata.Core.Interfaces.Api",
+                "Konata.Core.Events.Model",
+                "Paraparty.JsonChan"
+            },
+
+            // Initial script
+            GetInitialScript(),
+
+            // Enable checks
+            true,
+
+            // Execution timeout
+            5000
+        );
+
+        // Create bot
+        _bot = BotFather.Create(GetConfig(), GetDevice(), GetKeyStore());
         {
             // Print the log
-            _bot.OnLog += (_, e) => Console.WriteLine(e.EventMessage);
+            _bot.OnLog += (_, e) =>
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] " +
+                                  $"[{e.Level}] [{e.Tag}] {e.EventMessage}");
 
             // Handle the captcha
             _bot.OnCaptcha += (s, e) =>
@@ -44,45 +88,51 @@ public static class Program
                 }
             };
 
-            // Handle poke messages
-            _bot.OnGroupPoke += Poke.OnGroupPoke;
+            // Handle group messages
+            _bot.OnGroupMessage += GroupMessageHandler;
 
-            // Handle messages from group
-            _bot.OnGroupMessage += Command.OnGroupMessage;
-        }
-
-        // Login the bot
-        var result = await _bot.Login();
-        {
             // Update the keystore
-            if (result) UpdateKeystore(_bot.KeyStore);
-        }
-
-        // cli
-        while (true)
-        {
-            switch (Console.ReadLine())
+            _bot.OnBotOnline += (bot, _) =>
             {
-                case "/stop":
-                    await _bot.Logout();
-                    _bot.Dispose();
-                    return;
+                UpdateKeystore(bot.KeyStore);
+                Console.WriteLine("Bot keystore updated.");
+            };
+
+            // Login the bot
+            if (!await _bot.Login())
+            {
+                Console.WriteLine("Oops... Login failed.");
+                return;
+            }
+
+            // cli
+            while (true)
+            {
+                try
+                {
+                    switch (Console.ReadLine())
+                    {
+                        case "/stop":
+                            await _bot.Logout();
+                            _bot.Dispose();
+                            return;
+
+                        case "/login":
+                            await _bot.Login();
+                            break;
+
+                        case "/save":
+                            UpdateInitialScript(_sandbox.ExportScript());
+                            Console.WriteLine("Script saved.");
+                            break;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"{e.Message}\n{e.StackTrace}");
+                }
             }
         }
-    }
-
-    /// <summary>
-    /// Get bot config
-    /// </summary>
-    /// <returns></returns>
-    private static BotConfig GetConfig()
-    {
-        return new BotConfig
-        {
-            EnableAudio = true,
-            TryReconnect = true,
-            HighwayChunkSize = 8192,
-        };
     }
 
     /// <summary>
@@ -102,11 +152,42 @@ public static class Program
         var device = BotDevice.Default();
         {
             var deviceJson = JsonSerializer.Serialize(device,
-                new JsonSerializerOptions { WriteIndented = true });
+                new JsonSerializerOptions {WriteIndented = true});
             File.WriteAllText("device.json", deviceJson);
         }
 
         return device;
+    }
+
+    /// <summary>
+    /// Load or create configuration
+    /// </summary>
+    /// <returns></returns>
+    private static BotConfig? GetConfig()
+    {
+        // Read the device from config
+        if (File.Exists("config.json"))
+        {
+            return JsonSerializer.Deserialize
+                <BotConfig>(File.ReadAllText("config.json"));
+        }
+
+        // Create new one
+        var config = new BotConfig
+        {
+            EnableAudio = true,
+            TryReconnect = true,
+            HighwayChunkSize = 8192,
+            DefaultTimeout = 6000,
+            Protocol = OicqProtocol.AndroidPhone
+        };
+
+        // Write to file
+        var configJson = JsonSerializer.Serialize(config,
+            new JsonSerializerOptions {WriteIndented = true});
+        File.WriteAllText("config.json", configJson);
+
+        return config;
     }
 
     /// <summary>
@@ -143,9 +224,118 @@ public static class Program
     /// <returns></returns>
     private static BotKeyStore UpdateKeystore(BotKeyStore keystore)
     {
-        var deviceJson = JsonSerializer.Serialize(keystore,
-            new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText("keystore.json", deviceJson);
+        var keystoreJson = JsonSerializer.Serialize(keystore,
+            new JsonSerializerOptions {WriteIndented = true});
+        File.WriteAllText("keystore.json", keystoreJson);
         return keystore;
+    }
+
+    /// <summary>
+    /// Get repl initial script
+    /// </summary>
+    /// <returns></returns>
+    private static string GetInitialScript()
+        => File.Exists("init.cs") ? File.ReadAllText("init.cs") : "";
+
+    /// <summary>
+    /// Update repl initial script
+    /// </summary>
+    /// <param name="script"></param>
+    private static void UpdateInitialScript(string script)
+        => File.WriteAllText("init.cs", script);
+
+    private static async void GroupMessageHandler(Bot bot, GroupMessageEvent group)
+    {
+        // Ignore messages from bot itself
+        if (group.MemberUin == bot.Uin) return;
+        
+        // Takeout text chain for below processing
+        var textChain = group.Chain.GetChain<TextChain>();
+        if (textChain is null) return;
+
+        MessageBuilder? reply = null;
+
+        try
+        {
+            var debugging = false;
+            var content = textChain.Content;
+
+            if (content.StartsWith("/status"))
+                reply = Command.OnCommandStatus();
+            else if (content.StartsWith("https://github.com/"))
+                reply = await Command.OnCommandGithubParser(textChain);
+
+            // User-defined function in REPL
+            else if (content.StartsWith("/") && !content.StartsWith("/dbg"))
+            {
+                // Teardown command into an array
+                var cmdArray = content[1..].Split(" ");
+                if (cmdArray.Length == 0) return;
+
+                // if user-defined function exist
+                object? funcResult = null;
+                if (_sandbox.GetReplFuncion(cmdArray[0], out var func))
+                    funcResult = _sandbox.CallReplDelegate(func, cmdArray[1..]);
+
+                // Call and convert to result
+                if (funcResult != null)
+                    reply = MessageBuilder.Eval(funcResult.ToString());
+            }
+            else
+            {
+                // Enable repl debug echo
+                if (content.StartsWith("/dbg"))
+                {
+                    content = content[4..];
+                    debugging = true;
+                }
+
+                // Ignore immediate expressions
+                foreach (var filter in SandBoxFilter)
+                {
+                    if (filter.IsMatch(content)) return;
+                }
+
+                // Setup context
+                _sandboxEnv.Bot = bot;
+                _sandboxEnv.CurrentGroup = group.GroupUin;
+                _sandboxEnv.CurrentMember = group.MemberUin;
+
+                try
+                {
+                    // Run REPL code
+                    var result = await _sandbox.RunAsync(content);
+                    if (result == null) return;
+
+                    // Then error check
+                    if (result is Exception e)
+                    {
+                        // Normal runtime error
+                        if (e is ReplRuntimeException rre)
+                            result = $"{rre.InnerException!.Message}\n{rre.InnerException!.StackTrace}";
+
+                        // Slient other any errors
+                        else result = debugging ? e.Message : null;
+                    }
+
+                    // No errors return.
+                    if (result != null)
+                        reply = MessageBuilder.Eval(result.ToString());
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    Console.WriteLine(e.StackTrace);
+                }
+            }
+
+            // Send reply message
+            if (reply is not null) await bot.SendGroupMessage(group.GroupUin, reply);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            Console.WriteLine(e.StackTrace);
+        }
     }
 }

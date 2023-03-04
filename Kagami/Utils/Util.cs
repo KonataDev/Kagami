@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
@@ -14,40 +13,6 @@ public static class Util
         => Math.Round(bytes / 1048576.0, round);
 
     /// <summary>
-    /// Convert bv into av
-    /// </summary>
-    /// <param name="bvCode"></param>
-    /// <returns></returns>
-    public static string Bv2Av(this string bvCode)
-    {
-        const long xor = 177451812L;
-        const long add = 100618342136696320L;
-        const string table = "fZodR9XQDSUm21yCkr6" +
-                             "zBqiveYah8bt4xsWpHn" +
-                             "JE7jL5VG3guMTKNPAwcF";
-
-        var sed = new byte[] { 11, 10, 3, 8, 4, 6, 2, 9, 5, 7 };
-        var chars = new Dictionary<char, int>();
-        {
-            for (var i = 0; i < table.Length; ++i)
-                chars.Add(table[i], i);
-        }
-
-        try
-        {
-            var r = sed.Select((t, i) => chars[bvCode[t]] * (long)Math.Pow(table.Length, i)).Sum();
-
-            var result = r - add ^ xor;
-            return result is > 10000000000 or < 0 ? "" : $"av{result}";
-        }
-
-        catch
-        {
-            return "";
-        }
-    }
-
-    /// <summary>
     /// UrlDownload file
     /// </summary>
     /// <param name="url"></param>
@@ -57,22 +22,24 @@ public static class Util
     /// <returns></returns>
     public static async Task<byte[]> UrlDownload(this string url,
         Dictionary<string, string>? header = null,
-        int timeout = 8000, long limitLen = ((long)2 << 30) - 1)
+        int timeout = 8000, long limitLen = ((long) 2 << 30) - 1)
     {
         // Create request
-        var request = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.All })
+        var request = new HttpClient(new HttpClientHandler {AutomaticDecompression = DecompressionMethods.All})
         {
             Timeout = new TimeSpan(0, 0, 0, timeout),
             MaxResponseContentBufferSize = limitLen
         };
+
         // Default useragent
         request.DefaultRequestHeaders.Add("User-Agent", new[]
         {
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" ,
-            "AppleWebKit/537.36 (KHTML, like Gecko)" ,
-            "Chrome/100.0.4896.127 Safari/537.36 Edg/100.0.1185.50" ,
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "AppleWebKit/537.36 (KHTML, like Gecko)",
+            "Chrome/100.0.4896.127 Safari/537.36 Edg/100.0.1185.50",
             "Kagami/1.0.0 (Konata Project)"
         });
+
         // Append request header
         if (header is not null)
             foreach (var (k, v) in header)
