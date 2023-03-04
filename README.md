@@ -12,22 +12,32 @@ own bot with [Konata.Core](https://github.com/KonataDev/Konata.Core) quickly.
 
 ### Commands
 
-| Command | Description |
-| ------- | ----------- |
-| /help   | Print the help messages. |
-| /eval   | Print the raw messages that after '/eval' |
-| /echo   | Print the raw messages that after '/echo' (safer than /eval) |
-| /status | Print the status such as build, version, memory usage..etc |
-| /mute \<at\> [time]   | Mute the member. |
-| /member \<at\> | Inspect member information. |
+| Command                                 | Description                                                |
+|-----------------------------------------|------------------------------------------------------------|
+| /status                                 | Print the status such as build, version, memory usage..etc |
+| /dbg \<code\>                           | Enable the debug output of your REPL expression            |
+| any user-defined command start with '/' | /                                                          |
 
 ### Triggers
 
 | Trigger | Example | Description |
 | ------- | ------- | ----------- |
-| BV      | BV1Qh411i7ic | Parse the BiliBili video code(BV). |
 | Github  | https://github.com/KonataDev/Kagami | Parse the GitHub repo image. |
-|    /    |    /    | Repeater function. | 
+
+### REPL Feature
+Kagami offers a modern C# (Currently C# 11) interactive terminal,
+Type any valid C# expressions in the group then run the code.
+
+Benefited from the REPL feature, Kagami supports user-defined commands.  
+You can define your command like the example below: 
+```C#
+// define a command named 'example'
+// it has 3 argument inputs a, b and c.
+var example = string (int a, bool b, string c)
+    => $"a is {a}, b is {b}, c is \"{c}\"";
+```
+After defined the command, you can send '/example 1 false Hello' in your group,
+the Kagami will print "a is 1, b is False, c is "Hello"" string. 
 
 ### Known issues
 
