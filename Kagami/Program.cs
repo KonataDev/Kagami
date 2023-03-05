@@ -123,6 +123,10 @@ public static class Program
                         case "/login":
                             await _bot.Login();
                             break;
+                        
+                        case "/reload":
+                            await _sandbox.ScanScriptsAndLoad();
+                            break;
                     }
                 }
                 catch (Exception e)
