@@ -201,6 +201,28 @@ public class ReplRuntime<T>
     }
 
     /// <summary>
+    /// Trusted use only, no security checks
+    /// </summary>
+    /// <param name="code"></param>
+    public async Task AddScript(string code)
+    {
+        // Analysis context
+        Exception? runtimeErr = null;
+
+        // Execute script
+        _globalState = await _globalState.Script
+            .ContinueWith(code, _globalOptions)
+            .RunFromAsync(_globalState, e =>
+            {
+                runtimeErr = e;
+                return true;
+            });
+
+        // Throw all errors
+        if (runtimeErr != null) throw runtimeErr;
+    }
+
+    /// <summary>
     /// Get REPL function
     /// </summary>
     /// <param name="funcName"></param>

@@ -50,7 +50,7 @@ public static class Program
             },
 
             // Initial script
-            GetInitialScript(),
+            null,
 
             // Enable checks
             true,
@@ -59,6 +59,9 @@ public static class Program
             5000
         );
 
+        // Compile commands
+        await _sandbox.ScanScriptsAndLoad();
+        
         // Create bot
         _bot = BotFather.Create(GetConfig(), GetDevice(), GetKeyStore());
         {
@@ -120,11 +123,6 @@ public static class Program
                         case "/login":
                             await _bot.Login();
                             break;
-
-                        case "/save":
-                            UpdateInitialScript(_sandbox.ExportScript());
-                            Console.WriteLine("Script saved.");
-                            break;
                     }
                 }
                 catch (Exception e)
@@ -133,6 +131,38 @@ public static class Program
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Scan scripts and load
+    /// </summary>
+    /// <param name="sandbox"></param>
+    private static async Task ScanScriptsAndLoad(this ReplRuntime<ReplEnvironment> sandbox)
+    {
+        // If directory does not exist
+        if (!Directory.Exists("scripts"))
+        {
+            Console.WriteLine($"[ !!! ] The 'scripts' directory does not exist, return.");
+            return;
+        }
+
+        // Compile scripts and load
+        foreach (var i in Directory.EnumerateFiles
+                     ("scripts/", "*.cs", SearchOption.AllDirectories))
+        {
+            try
+            {
+                Console.WriteLine($"[ *** ] REPL compiling script => {i}");
+                await sandbox.AddScript(await File.ReadAllTextAsync(i));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"[ !!! ] Failed to add script {i}, ignoring.");
+                Console.WriteLine($"[     ] {e.Message}");
+            }
+        }
+
+        Console.WriteLine("[ *** ] REPL scripts load finished.");
     }
 
     /// <summary>
@@ -230,25 +260,11 @@ public static class Program
         return keystore;
     }
 
-    /// <summary>
-    /// Get repl initial script
-    /// </summary>
-    /// <returns></returns>
-    private static string GetInitialScript()
-        => File.Exists("init.cs") ? File.ReadAllText("init.cs") : "";
-
-    /// <summary>
-    /// Update repl initial script
-    /// </summary>
-    /// <param name="script"></param>
-    private static void UpdateInitialScript(string script)
-        => File.WriteAllText("init.cs", script);
-
     private static async void GroupMessageHandler(Bot bot, GroupMessageEvent group)
     {
         // Ignore messages from bot itself
         if (group.MemberUin == bot.Uin) return;
-        
+
         // Takeout text chain for below processing
         var textChain = group.Chain.GetChain<TextChain>();
         if (textChain is null) return;
