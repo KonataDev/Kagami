@@ -25,9 +25,10 @@ own bot with [Konata.Core](https://github.com/KonataDev/Konata.Core) quickly.
 | Github  | https://github.com/KonataDev/Kagami | Parse the GitHub repo image. |
 
 ### REPL Feature
-Kagami offers a modern C# (Currently C# 11) interactive terminal,
-Type any valid C# expressions in the group then run the code.
+Kagami offers a modern C# (Currently C# 11) interactive terminal,  
+type any valid C# expressions in the group then run the code.
 
+#### Example
 Benefited from the REPL feature, Kagami supports user-defined commands.  
 You can define your command like the example below: 
 ```C#
@@ -36,10 +37,40 @@ You can define your command like the example below:
 var example = string (int a, bool b, string c)
     => $"a is {a}, b is {b}, c is \"{c}\"";
 ```
-After defined the command, you can send '/example 1 false Hello' in your group,  
-the Kagami will print "a is 1, b is False, c is "Hello"" string. 
+After defined the command, you can send '/example 1 false Hello' in your group,    
+then Kagami will prints a "a is 1, b is False, c is Hello" string. 
 
-### Known issues
+#### Script Presets
+The script presets are stored in 'scripts' directory,  
+write down your code and save with '.cs' suffix name here and restart Kagami to take effect. 
+
+The normal output while Kagami starting:
+```
+[ *** ] REPL compiling script => scripts/ic.cs
+[ *** ] REPL compiling script => scripts/help.cs
+[ *** ] REPL compiling script => scripts/echo.cs
+[ *** ] REPL compiling script => scripts/ping.cs
+[ *** ] REPL compiling script => scripts/mute.cs
+[ *** ] REPL scripts load finished.
+```
+
+#### Sandbox Environment
+
+Sandbox environment are defined in [ReplEnvironment.cs](./Kagami/SandBox/ReplEnvironment.cs),  
+Contains fields, classes and methods as the script runtime context.
+
+| Name          | Description                                  |
+|---------------|----------------------------------------------|
+| Bot           | The Kagami bot instance, full access in REPL |
+| CurrentGroup  | Current group uin                            |
+| CurrentMember | Current member uin                           |
+| JSON          | The dynamic JSON parser, use JSON.Parse()    |
+| Print         | Print a string                               |
+| CanIDo        | Bot do something with a probability          |
+| Wget          | Http request                                 |
+| Random        | Shared random                                |
+
+### Known Issues
 
 - [x] Sometimes offline.
 - [x] Sometimes stuck on some internal tasks.
