@@ -18,17 +18,36 @@ public class TestReplRuntime
         _repl = new ReplRuntime<ReplEnvironment>(_env,
 
             // Additional references
-            new[] {"System.Diagnostics"},
+            new[]
+            {
+                "System.Diagnostics",
+                "Konata.Core",
+                "Paraparty.JsonChan"
+            },
 
             // Additional usings
-            null,
+            new[]
+            {
+                "System.Runtime",
+                "System.Threading",
+                "System.Threading.Tasks",
+                "Konata.Core",
+                "Konata.Core.Common",
+                "Konata.Core.Interfaces",
+                "Konata.Core.Interfaces.Api",
+                "Konata.Core.Events",
+                "Konata.Core.Events.Model",
+                "Konata.Core.Message",
+                "Konata.Core.Message.Model",
+                "Paraparty.JsonChan"
+            },
 
             // Initial script
             null,
 
             // Enable checks
             true,
-            
+
             // Execution timeout
             5000
         );
@@ -45,6 +64,13 @@ public class TestReplRuntime
     public async Task<string> HelloWorld()
         => await RunAsync("\"Hello World!\"") ?? string.Empty;
 
+    [Test]
+    public void CreateBot()
+    {
+        var result = RunAsync("BotFather.Create(\"233\",\"testtest\", out _, out _, out _) != null").Result;
+        Assert.AreEqual("True", result);
+    }
+
     [Test(ExpectedResult = StringProtected)]
     public async Task<string> ExpProcessStart()
         => await RunAsync($"System.Diagnostics.Process.Start(\"calc.exe\"); " +
@@ -56,7 +82,7 @@ public class TestReplRuntime
         RunAsync("using Diag = System.Diagnostics;").Wait();
         var result = RunAsync("Diag.Process.Start(\"calc.exe\"); " +
                               "return \"Exploit OK\";").Result ?? StringProtected;
-        Assert.AreEqual(result, StringProtected);
+        Assert.AreEqual(StringProtected, result);
     }
 
     [Test]
@@ -66,7 +92,7 @@ public class TestReplRuntime
         RunAsync("var domain = Thread.GetDomain();").Wait();
         RunAsync("var payload = domain.Load(typeof(s.Activator).Assembly.Location);").Wait();
         var result = RunAsync($"return payload == null ? \"{StringExploitOk}\" : \"{StringExploitOk}\";").Result ?? StringProtected;
-        Assert.AreEqual(result, StringProtected);
+        Assert.AreEqual(StringProtected, result);
     }
 
     [Test]
@@ -77,9 +103,9 @@ public class TestReplRuntime
                  "static extern IntPtr LoadLibraryA(string libname);").Wait();
         RunAsync("var payload = LoadLibraryA(\"{kernel32.dll}\");").Wait();
         var result = RunAsync($"return payload != null ? \"{StringExploitOk}\" : \"{StringExploitOk}\";").Result ?? StringProtected;
-        Assert.AreEqual(result, StringProtected);
+        Assert.AreEqual(StringProtected, result);
     }
-    
+
     [Test]
     public void ExpSimpleDeadLoop()
     {
@@ -95,7 +121,7 @@ public class TestReplRuntime
         RunAsync("Here: goto Here;").Wait();
         Assert.Pass();
     }
- 
+
     [Test]
     public void AssertPass()
     {

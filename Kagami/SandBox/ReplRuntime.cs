@@ -73,13 +73,13 @@ public class ReplRuntime<T>
             if (additionalReferences != null)
             {
                 foreach (var i in additionalReferences)
-                    _globalOptions.AddReferences(i);
+                    _globalOptions = _globalOptions.AddReferences(i);
             }
 
             if (additionalUsings != null)
             {
                 foreach (var i in additionalUsings)
-                    _globalOptions.AddImports(i);
+                    _globalOptions = _globalOptions.AddImports(i);
             }
         }
 

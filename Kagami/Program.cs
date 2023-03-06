@@ -33,7 +33,11 @@ public static class Program
         _sandbox = new ReplRuntime<ReplEnvironment>(_sandboxEnv,
 
             // Additional references
-            new[] {"Konata.Core", "Paraparty.JsonChan"},
+            new[]
+            {
+                "Konata.Core",
+                "Paraparty.JsonChan"
+            },
 
             // Additional usings
             new[]
