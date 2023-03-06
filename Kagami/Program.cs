@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -12,12 +13,13 @@ using Konata.Core.Message;
 using Konata.Core.Message.Model;
 using Kagami.SandBox;
 
+[assembly: InternalsVisibleTo("Kagami.Test")]
+
 namespace Kagami;
 
 public static class Program
 {
     private static Bot _bot = null!;
-    private static ReplEnvironment _sandboxEnv = null!;
     private static ReplRuntime<ReplEnvironment> _sandbox = null!;
 
     private static readonly Regex[] SandBoxFilter =
@@ -29,9 +31,7 @@ public static class Program
     public static async Task Main()
     {
         // Create sandbox
-        _sandboxEnv = new ReplEnvironment();
-        _sandbox = new ReplRuntime<ReplEnvironment>(_sandboxEnv,
-
+        _sandbox = new ReplRuntime<ReplEnvironment>(
             // Additional references
             new[]
             {
@@ -65,7 +65,7 @@ public static class Program
 
         // Compile commands
         await _sandbox.ScanScriptsAndLoad();
-        
+
         // Create bot
         _bot = BotFather.Create(GetConfig(), GetDevice(), GetKeyStore());
         {
@@ -127,7 +127,7 @@ public static class Program
                         case "/login":
                             await _bot.Login();
                             break;
-                        
+
                         case "/reload":
                             await _sandbox.ScanScriptsAndLoad();
                             break;
@@ -299,7 +299,14 @@ public static class Program
                 // if user-defined function exist
                 object? funcResult = null;
                 if (_sandbox.GetReplFuncion(cmdArray[0], out var func))
-                    funcResult = _sandbox.CallReplDelegate(func, cmdArray[1..]);
+                {
+                    funcResult = _sandbox.CallReplDelegate(func, env =>
+                    {
+                        env.Bot = bot;
+                        env.CurrentGroup = group.GroupUin;
+                        env.CurrentMember = group.MemberUin;
+                    }, cmdArray[1..]);
+                }
 
                 // Call and convert to result
                 if (funcResult != null)
@@ -320,15 +327,16 @@ public static class Program
                     if (filter.IsMatch(content)) return;
                 }
 
-                // Setup context
-                _sandboxEnv.Bot = bot;
-                _sandboxEnv.CurrentGroup = group.GroupUin;
-                _sandboxEnv.CurrentMember = group.MemberUin;
-
                 try
                 {
-                    // Run REPL code
-                    var result = await _sandbox.RunAsync(content);
+                    // Run REPL code with environment
+                    var result = await _sandbox.RunAsync(content, env =>
+                    {
+                        env.Bot = bot;
+                        env.CurrentGroup = group.GroupUin;
+                        env.CurrentMember = group.MemberUin;
+                    });
+
                     if (result == null) return;
 
                     // Then error check

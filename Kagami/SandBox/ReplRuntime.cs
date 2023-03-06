@@ -12,7 +12,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Kagami.SandBox;
 
-public class ReplRuntime<T>
+public class ReplRuntime<T> where T : new()
 {
     private static readonly RegexOptions FilterOption
         = RegexOptions.IgnoreCase | RegexOptions.Singleline;
@@ -40,21 +40,23 @@ public class ReplRuntime<T>
         new(@"(System\.Activator)", FilterOption),
     };
 
+    private readonly object _globalObject;
     private ScriptState<object> _globalState;
     private readonly ScriptOptions _globalOptions;
     private readonly bool _enableChecks;
     private readonly int _execTimeout;
 
+    public T Global => (T) _globalObject;
+
     /// <summary>
     /// Repl runtime ctor
     /// </summary>
-    /// <param name="global">global environment object</param>
     /// <param name="additionalReferences">additional references</param>
     /// <param name="additionalUsings">additional usings</param>
     /// <param name="initialScript">initial script</param>
     /// <param name="enableChecks">enable code rule check</param>
     /// <param name="execTimeout">timeout of script execution</param>
-    public ReplRuntime(T global, string[]? additionalReferences, string[]? additionalUsings,
+    public ReplRuntime(string[]? additionalReferences, string[]? additionalUsings,
         string? initialScript, bool enableChecks, int execTimeout)
     {
         // Create script options
@@ -84,15 +86,15 @@ public class ReplRuntime<T>
         }
 
         // Create initial script
+        _globalObject = new T();
         var script = CSharpScript.Create(initialScript ?? "",
-            _globalOptions, global == null ? null : typeof(T));
+            _globalOptions, typeof(T));
         {
             // Create a empty state
             _globalState = script.RunAsync
-                (global, _ => true).GetAwaiter().GetResult();
+                (_globalObject, _ => true).GetAwaiter().GetResult();
         }
 
-        // Enable code rule checks
         _enableChecks = enableChecks;
         _execTimeout = execTimeout;
     }
@@ -101,8 +103,9 @@ public class ReplRuntime<T>
     /// Run code async
     /// </summary>
     /// <param name="code">c# code</param>
+    /// <param name="updateEnv">environment update callback</param>
     /// <returns></returns>
-    public async Task<object?> RunAsync(string code)
+    public async Task<object?> RunAsync(string code, Action<T>? updateEnv = null)
     {
         // Run semantic check
         if (_enableChecks)
@@ -144,43 +147,46 @@ public class ReplRuntime<T>
             // Checks are all passed, here we go~ = w =
         }
 
-        lock (_globalState)
+        // Analysis context
+        (Exception? compileErr, Exception? runtimeErr,
+            bool hasCompileErr, Thread thread, bool finish) analysisCtx = new();
         {
-            // Append the code to the last session
-            var newScript = _globalState.Script
-                .ContinueWith(code, _globalOptions);
-
-            // Analysis context
-            (Exception? compileErr, Exception? runtimeErr,
-                bool hasCompileErr, Thread thread, bool finish) analysisCtx = new();
+            void Analysis()
             {
-                analysisCtx.thread = new Thread(() =>
+                try
                 {
-                    try
+                    lock (_globalState)
                     {
-                        // Execute the code in the thread
-                        _globalState = newScript.RunFromAsync(_globalState, e =>
-                        {
-                            analysisCtx.runtimeErr = e;
-                            return true;
-                        }).Result;
-                    }
+                        // Update environment
+                        if (updateEnv != null) updateEnv((T) _globalObject);
 
-                    // Compile-time errors
-                    catch (Exception e)
-                    {
-                        // Ignore CS0103
-                        analysisCtx.compileErr = e.Message.Contains("error CS0103") ? null : e;
-                        analysisCtx.hasCompileErr = true;
+                        // Append the code to the last session and execute
+                        _globalState = _globalState.Script
+                            .ContinueWith(code, _globalOptions)
+                            .RunFromAsync(_globalState, e =>
+                            {
+                                analysisCtx.runtimeErr = e;
+                                return true;
+                            }).GetAwaiter().GetResult();
                     }
-                    finally
-                    {
-                        analysisCtx.finish = true;
-                    }
-                });
+                }
+
+                // Compile-time errors
+                catch (Exception e)
+                {
+                    // Ignore CS0103
+                    analysisCtx.compileErr = e.Message.Contains("error CS0103") ? null : e;
+                    analysisCtx.hasCompileErr = true;
+                }
+
+                finally
+                {
+                    analysisCtx.finish = true;
+                }
             }
 
             // Configure thread an run
+            analysisCtx.thread = new Thread(Analysis);
             analysisCtx.thread.IsBackground = true;
             analysisCtx.thread.Priority = ThreadPriority.Lowest;
             analysisCtx.thread.Start();
@@ -225,8 +231,8 @@ public class ReplRuntime<T>
     /// <summary>
     /// Get REPL function
     /// </summary>
-    /// <param name="funcName"></param>
-    /// <param name="funcDelegate"></param>
+    /// <param name="funcName">function name</param>
+    /// <param name="funcDelegate">delegate function</param>
     /// <returns></returns>
     public bool GetReplFuncion(string funcName, out Delegate? funcDelegate)
     {
@@ -265,10 +271,11 @@ public class ReplRuntime<T>
     /// <summary>
     /// Call REPL function delegates
     /// </summary>
-    /// <param name="funcDelegate"></param>
-    /// <param name="funcParameters"></param>
+    /// <param name="funcDelegate">delegate function</param>
+    /// <param name="updateEnv">environment update callback</param>
+    /// <param name="funcParameters">function parameters</param>
     /// <returns></returns>
-    public object? CallReplDelegate(Delegate? funcDelegate, params string[] funcParameters)
+    public object? CallReplDelegate(Delegate? funcDelegate, Action<T> updateEnv, params string[] funcParameters)
     {
         if (funcDelegate == null) return null;
 
@@ -307,26 +314,11 @@ public class ReplRuntime<T>
             ++argindex;
         }
 
-        return funcDelegate.DynamicInvoke(args.ToArray());
-    }
-
-    /// <summary>
-    /// Export script
-    /// </summary>
-    /// <returns></returns>
-    public string ExportScript()
-    {
-        var export = "";
-        var script = _globalState.Script;
-
-        // enum till the head of script
-        do
+        lock (_globalState)
         {
-            export = $"{script.Code}\n{export};";
-            script = script.Previous;
-        } while (script.Previous != null);
-
-        return export;
+            updateEnv((T) _globalObject);
+            return funcDelegate.DynamicInvoke(args.ToArray()); 
+        }
     }
 }
 
