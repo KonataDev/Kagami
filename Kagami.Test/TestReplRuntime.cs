@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Kagami.SandBox;
 using NUnit.Framework;
 
@@ -6,7 +8,6 @@ namespace Kagami.Test;
 
 public class TestReplRuntime
 {
-    private static ReplEnvironment? _env;
     private static ReplRuntime<ReplEnvironment>? _repl;
     private const string StringExploitOk = "ExploitOK";
     private const string StringProtected = "Protected";
@@ -14,9 +15,7 @@ public class TestReplRuntime
     [SetUp]
     public void Setup()
     {
-        _env = new ReplEnvironment();
-        _repl = new ReplRuntime<ReplEnvironment>(_env,
-
+        _repl = new ReplRuntime<ReplEnvironment>(
             // Additional references
             new[]
             {
@@ -53,11 +52,18 @@ public class TestReplRuntime
         );
     }
 
-    private static async Task<string?> RunAsync(string code)
+    private static async Task<string?> RunAsync(string code, Action<ReplEnvironment>? cb = null)
     {
-        var result = await _repl!.RunAsync(code);
+        var result = await _repl!.RunAsync(code, cb);
         if (result == null) return null;
         return result.ToString();
+    }
+
+    private static async Task<object?> RunAsyncAsObject(string code, Action<ReplEnvironment>? cb = null)
+    {
+        var result = await _repl!.RunAsync(code, cb);
+        if (result == null) return null;
+        return result;
     }
 
     [Test(ExpectedResult = "Hello World!")]
@@ -69,6 +75,28 @@ public class TestReplRuntime
     {
         var result = RunAsync("BotFather.Create(\"233\",\"testtest\", out _, out _, out _) != null").Result;
         Assert.AreEqual("True", result);
+    }
+
+    [Test]
+    public void RunInMultiThreaded()
+    {
+        async Task<bool> Run(uint number)
+        {
+            var result = await RunAsyncAsObject("CurrentMember",
+                env => { env.CurrentMember = number; }) as uint? ?? 0;
+            return result == number;
+        }
+
+        for (var i = 0U; i < 20; ++i)
+        {
+            var i1 = i;
+            new Thread(() =>
+            {
+                if (!Run(i1).Result) throw new Exception("Not equal");
+            }).Start();
+        }
+
+        Assert.Pass();
     }
 
     [Test(ExpectedResult = StringProtected)]
