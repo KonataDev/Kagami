@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Kagami.Utils;
 using Konata.Core;
@@ -77,6 +79,19 @@ public class ReplEnvironment
     /// <returns></returns>
     public Task<byte[]> Wget(string url)
         => url.UrlDownload();
+
+    /// <summary>
+    /// Repeat string
+    /// </summary>
+    /// <param name="str"></param>
+    /// <param name="count"></param>
+    /// <returns></returns>
+    public string Repeat(string str, uint count)
+    {
+        var arr = new string[count];
+        Array.Fill(arr, str);
+        return string.Join("", arr);
+    }
 
     #endregion
 }
