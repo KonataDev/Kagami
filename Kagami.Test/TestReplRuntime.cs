@@ -138,7 +138,7 @@ public class TestReplRuntime
     public void ExpGetType()
     {
         var result = RunAsync("var s = 1.GetType().FullName;"
-            + $"return \"{StringExploitOk}\";").Result ?? StringProtected;
+                              + $"return \"{StringExploitOk}\";").Result ?? StringProtected;
         Assert.AreEqual(StringProtected, result);
     }
 
@@ -164,6 +164,21 @@ public class TestReplRuntime
         RunAsync("for(;!false;);").Wait();
         RunAsync("Here: goto Here;").Wait();
         Assert.Pass();
+    }
+
+    [Test]
+    public void NormalCodeAfterDeadLoop()
+    {
+        try
+        {
+            RunAsync("while (true);").Wait();
+            Assert.AreEqual("2", RunAsync("1 + 1").Result);
+        }
+
+        catch (Exception e)
+        {
+            // ignore exception
+        }
     }
 
     [Test]

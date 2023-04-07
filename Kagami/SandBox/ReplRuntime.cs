@@ -20,10 +20,10 @@ public class ReplRuntime<T> where T : new()
     private static readonly Regex[] FilterKeywords =
     {
         new(@"^(Type|TypeInfo|Console|Reflection|Activator)$", FilterOption),
-        new(@"^(Environment|Process|Directory|Socket|File|Http|Net)$", FilterOption),
-        new(@"^(Domain|Assemblies|Assembly|Modules|AppDomain|Win32|AppContext|Microsoft|OperatingSystem)$", FilterOption),
+        new(@"^(Environment|Process|Directory|Socket)$", FilterOption),
+        new(@"^(Domain|Assemblies|Assemply|Modules|AppDomain|Win32|AppContext|Microsoft|OperatingSystem)$", FilterOption),
         new(@"^(InteropServices|Marshal|DllImport)$", FilterOption),
-        new(@"^(GetType|GetDomain)$", FilterOption),
+        new(@"^(File|Http|Net)$", FilterOption),
     };
 
     private static readonly Regex[] FilterNamespaces =
@@ -148,27 +148,24 @@ public class ReplRuntime<T> where T : new()
         }
 
         // Analysis context
-        (Exception? compileErr, Exception? runtimeErr,
-            bool hasCompileErr, Thread thread, bool finish) analysisCtx = new();
+        (Exception? compileErr, Exception? runtimeErr, bool hasCompileErr,
+            Thread thread, ScriptState<object> newState, bool finish) analysisCtx = new();
         {
             void Analysis()
             {
                 try
                 {
-                    lock (_globalState)
-                    {
-                        // Update environment
-                        if (updateEnv != null) updateEnv((T) _globalObject);
+                    // Update environment
+                    if (updateEnv != null) updateEnv((T) _globalObject);
 
-                        // Append the code to the last session and execute
-                        _globalState = _globalState.Script
-                            .ContinueWith(code, _globalOptions)
-                            .RunFromAsync(_globalState, e =>
-                            {
-                                analysisCtx.runtimeErr = e;
-                                return true;
-                            }).GetAwaiter().GetResult();
-                    }
+                    // Append the code to the last session and execute
+                    analysisCtx.newState = _globalState.Script
+                        .ContinueWith(code, _globalOptions)
+                        .RunFromAsync(_globalState, e =>
+                        {
+                            analysisCtx.runtimeErr = e;
+                            return true;
+                        }).GetAwaiter().GetResult();
                 }
 
                 // Compile-time errors
@@ -186,23 +183,30 @@ public class ReplRuntime<T> where T : new()
             }
 
             // Configure thread an run
-            analysisCtx.thread = new Thread(Analysis);
-            analysisCtx.thread.IsBackground = true;
-            analysisCtx.thread.Priority = ThreadPriority.Lowest;
-            analysisCtx.thread.Start();
-            analysisCtx.thread.Join(_execTimeout);
-
-            // If execution timeout
-            if (!analysisCtx.finish)
+            lock (_globalState)
             {
-                analysisCtx.thread.Interrupt();
-                analysisCtx.runtimeErr = new TimeoutException("Script execution timeout, exceed 5000ms.");
-            }
+                analysisCtx.thread = new Thread(Analysis);
+                analysisCtx.thread.IsBackground = true;
+                analysisCtx.thread.Priority = ThreadPriority.Lowest;
+                analysisCtx.thread.Start();
+                analysisCtx.thread.Join(_execTimeout);
 
-            // Return results
-            if (analysisCtx.hasCompileErr) return analysisCtx.compileErr;
-            else if (analysisCtx.runtimeErr != null) return new ReplRuntimeException(analysisCtx.runtimeErr);
-            else return _globalState.ReturnValue;
+                // If execution timeout
+                if (!analysisCtx.finish)
+                {
+                    analysisCtx.thread.Interrupt();
+                    analysisCtx.runtimeErr = new TimeoutException("Script execution timeout, exceed 5000ms.");
+                }
+
+                // Update state if script is executed successfully
+                else if (analysisCtx.newState != null)
+                    _globalState = analysisCtx.newState;
+
+                // Return results
+                if (analysisCtx.hasCompileErr) return analysisCtx.compileErr;
+                else if (analysisCtx.runtimeErr != null) return new ReplRuntimeException(analysisCtx.runtimeErr);
+                else return _globalState.ReturnValue;
+            }
         }
     }
 
@@ -317,7 +321,7 @@ public class ReplRuntime<T> where T : new()
         lock (_globalState)
         {
             updateEnv((T) _globalObject);
-            return funcDelegate.DynamicInvoke(args.ToArray()); 
+            return funcDelegate.DynamicInvoke(args.ToArray());
         }
     }
 }
