@@ -54,6 +54,8 @@ The normal output while Kagami starting:
 [ *** ] REPL scripts load finished.
 ```
 
+See more examples in [ScriptExample](./ScriptExample).
+
 #### Sandbox Environment
 
 Sandbox environment are defined in [ReplEnvironment.cs](./Kagami/SandBox/ReplEnvironment.cs),  
