@@ -20,10 +20,10 @@ public class ReplRuntime<T> where T : new()
     private static readonly Regex[] FilterKeywords =
     {
         new(@"^(Type|TypeInfo|Console|Reflection|Activator)$", FilterOption),
-        new(@"^(Environment|Process|Directory|Socket)$", FilterOption),
-        new(@"^(Domain|Assemblies|Assemply|Modules|AppDomain|Win32|AppContext|Microsoft|OperatingSystem)$", FilterOption),
+        new(@"^(Environment|Process|Directory|Socket|File|Http|Net)$", FilterOption),
+        new(@"^(Domain|Assemblies|Assembly|Modules|AppDomain|Win32|AppContext|Microsoft|OperatingSystem)$", FilterOption),
         new(@"^(InteropServices|Marshal|DllImport)$", FilterOption),
-        new(@"^(File|Http|Net)$", FilterOption),
+        new(@"^(GetType|GetDomain)$", FilterOption),
     };
 
     private static readonly Regex[] FilterNamespaces =
