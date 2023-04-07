@@ -135,6 +135,22 @@ public class TestReplRuntime
     }
 
     [Test]
+    public void ExpGetType()
+    {
+        var result = RunAsync("var s = 1.GetType().FullName;"
+            + $"return \"{StringExploitOk}\";").Result ?? StringProtected;
+        Assert.AreEqual(StringProtected, result);
+    }
+
+    [Test]
+    public void ExpThreadBasedLongLoop()
+    {
+        RunAsync("Thread.Sleep(int.MaxValue);").Wait();
+        RunAsync("Thread.SpinWait(int.MaxValue);").Wait();
+        Assert.Pass();
+    }
+
+    [Test]
     public void ExpSimpleDeadLoop()
     {
         // Too many deadloop tricks, woaaaa...
