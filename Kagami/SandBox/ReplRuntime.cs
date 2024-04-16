@@ -283,37 +283,49 @@ public class ReplRuntime<T> where T : new()
     {
         if (funcDelegate == null) return null;
 
+        var parameters = funcDelegate.Method.GetParameters();
         // Process parameter conventions
-        var args = new List<object?>();
+        var args = new List<object?>(parameters.Length);
         var argindex = 0;
 
-        foreach (var arg in funcDelegate.Method.GetParameters())
+        foreach (var arg in parameters)
         {
-            // Only supports c# standard types
-            args.Add(arg.ParameterType.Name switch
+            if (argindex >= funcParameters.Length)
             {
-                nameof(String) => funcParameters[argindex],
-                nameof(Boolean) => Convert.ToBoolean(funcParameters[argindex]),
-
-                nameof(Byte) => Convert.ToByte(funcParameters[argindex]),
-                nameof(UInt16) => Convert.ToUInt16(funcParameters[argindex]),
-                nameof(UInt32) => Convert.ToUInt32(funcParameters[argindex]),
-                nameof(UInt64) => Convert.ToUInt64(funcParameters[argindex]),
-
-                nameof(SByte) => Convert.ToSByte(funcParameters[argindex]),
-                nameof(Int16) => Convert.ToInt16(funcParameters[argindex]),
-                nameof(Int32) => Convert.ToInt32(funcParameters[argindex]),
-                nameof(Int64) => Convert.ToInt64(funcParameters[argindex]),
-
-                nameof(Single) => Convert.ToSingle(funcParameters[argindex]),
-                nameof(Double) => Convert.ToDouble(funcParameters[argindex]),
-                nameof(Decimal) => Convert.ToDecimal(funcParameters[argindex]),
-                nameof(DateTime) => Convert.ToDateTime(funcParameters[argindex]),
-                nameof(Char) => Convert.ToChar(funcParameters[argindex]),
-
-                // any as object 
-                _ => funcParameters[argindex]
-            });
+                if (!arg.IsOptional)
+                {
+                    return null; // Required parameter was not found
+                }
+                args.Add(arg.DefaultValue);
+            }
+            else
+            {
+                // Only supports c# standard types
+                args.Add(arg.ParameterType.Name switch
+                {
+                    nameof(String) => funcParameters[argindex],
+                    nameof(Boolean) => Convert.ToBoolean(funcParameters[argindex]),
+    
+                    nameof(Byte) => Convert.ToByte(funcParameters[argindex]),
+                    nameof(UInt16) => Convert.ToUInt16(funcParameters[argindex]),
+                    nameof(UInt32) => Convert.ToUInt32(funcParameters[argindex]),
+                    nameof(UInt64) => Convert.ToUInt64(funcParameters[argindex]),
+    
+                    nameof(SByte) => Convert.ToSByte(funcParameters[argindex]),
+                    nameof(Int16) => Convert.ToInt16(funcParameters[argindex]),
+                    nameof(Int32) => Convert.ToInt32(funcParameters[argindex]),
+                    nameof(Int64) => Convert.ToInt64(funcParameters[argindex]),
+    
+                    nameof(Single) => Convert.ToSingle(funcParameters[argindex]),
+                    nameof(Double) => Convert.ToDouble(funcParameters[argindex]),
+                    nameof(Decimal) => Convert.ToDecimal(funcParameters[argindex]),
+                    nameof(DateTime) => Convert.ToDateTime(funcParameters[argindex]),
+                    nameof(Char) => Convert.ToChar(funcParameters[argindex]),
+    
+                    // any as object 
+                    _ => funcParameters[argindex]
+                });
+            }
 
             ++argindex;
         }
